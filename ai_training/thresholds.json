@@ -1,0 +1,49 @@
+{
+  "version": "0.1-draft",
+  "validated": false,
+  "note": "PLACEHOLDER values carried over from the prototype. NOT medically reviewed. Fill 'source' and 'reviewed_by' per metric and set 'validated' to true only after a qualified reviewer signs off.",
+  "metrics": {
+    "heart_rate": {
+      "unit": "bpm",
+      "low": 50, "high": 100, "crit_low": 40, "crit_high": 130,
+      "plausible_min": 20, "plausible_max": 250,
+      "required": true,
+      "source": "UNVERIFIED placeholder", "reviewed_by": null
+    },
+    "systolic_bp": {
+      "unit": "mmHg",
+      "low": 90, "high": 130, "crit_low": 80, "crit_high": 180,
+      "plausible_min": 50, "plausible_max": 260,
+      "required": true,
+      "source": "UNVERIFIED placeholder", "reviewed_by": null
+    },
+    "diastolic_bp": {
+      "unit": "mmHg",
+      "low": 60, "high": 85, "crit_low": 50, "crit_high": 120,
+      "plausible_min": 30, "plausible_max": 160,
+      "required": false,
+      "source": "UNVERIFIED placeholder", "reviewed_by": null
+    },
+    "spo2": {
+      "unit": "%",
+      "low": 94, "high": 100, "crit_low": 90, "crit_high": null,
+      "plausible_min": 50, "plausible_max": 100,
+      "required": true,
+      "source": "UNVERIFIED placeholder", "reviewed_by": null
+    },
+    "sleep_hours": {
+      "unit": "h",
+      "low": 6.0, "high": 9.0, "crit_low": 3.0, "crit_high": 12.0,
+      "plausible_min": 0, "plausible_max": 24,
+      "required": true,
+      "source": "UNVERIFIED placeholder", "reviewed_by": null
+    },
+    "radiation_msv": {
+      "unit": "mSv/day",
+      "low": 0.0, "high": 1.5, "crit_low": null, "crit_high": 5.0,
+      "plausible_min": 0, "plausible_max": 100,
+      "required": true,
+      "source": "UNVERIFIED placeholder", "reviewed_by": null
+    }
+  }
+}

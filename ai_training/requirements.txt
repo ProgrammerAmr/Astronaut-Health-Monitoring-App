@@ -1,0 +1,7 @@
+chromadb
+langchain-ollama
+langchain-text-splitters
+fastapi
+uvicorn
+python-dotenv
+pytest

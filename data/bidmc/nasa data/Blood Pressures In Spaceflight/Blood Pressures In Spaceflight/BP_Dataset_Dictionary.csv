@@ -1,0 +1,30 @@
+Variable,Description,Units
+source,Title of the source study or publication,-
+mission_type,"Type of mission or simulation (e.g., STS, ISS, Soyuz, HDT, Lab)",-
+in_sbp,In-flight systolic blood pressure (SBP),mmHg
+in_sbp_sd,Standard deviation of in-flight SBP,mmHg
+in_dbp,In-flight diastolic blood pressure (DBP),mmHg
+in_dbp_sd,Standard deviation of in-flight DBP,mmHg
+in_map,In-flight mean arterial pressure (MAP),mmHg
+in_map_sd,Standard deviation of in-flight MAP,mmHg
+pre_sbp,Pre-flight SBP,mmHg
+pre_sbp_sd,Standard deviation of pre-flight SBP,mmHg
+pre_dbp,Pre-flight DBP,mmHg
+pre_dbp_sd,Standard deviation of pre-flight DBP,mmHg
+pre_map,Pre-flight MAP,mmHg
+premapsd,Standard deviation of pre-flight MAP,mmHg
+post_sbp,Post-flight SBP,mmHg
+post_sbp_sd,Standard deviation of post-flight SBP,mmHg
+post_dbp,Post-flight DBP,mmHg
+post_dbp_sd,Standard deviation of post-flight DBP,mmHg
+postmap,Post-flight MAP,mmHg
+postmap_sd,Standard deviation of post-flight MAP,mmHg
+bmi,Average body mass index (BMI),kg/m²
+bmi_sd,Standard deviation of BMI,kg/m²
+sex_male,Number of male participants,count
+sex_female,Number of female participants,count
+n,Total number of participants,count
+age,Average age of participants,years
+age_sd,Standard deviation of age,years
+countermeasure,"Presence of any countermeasure used (e.g., exercise, device)",-
+countermeasures,Details of countermeasure or indicator (yes/no/unknown),-

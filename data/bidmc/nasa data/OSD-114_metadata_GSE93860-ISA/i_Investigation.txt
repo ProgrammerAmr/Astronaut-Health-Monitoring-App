@@ -1,0 +1,123 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	NCBITAXON	EFO	OBI	MESH	OSD
+Term Source File	http://data.bioontology.org/ontologies/NCBITAXON	http://data.bioontology.org/ontologies/EFO	http://data.bioontology.org/ontologies/OBI	http://data.bioontology.org/ontologies/MESH	https://osdr.nasa.gov/
+Term Source Version	2	111	21	5	1.0
+Term Source Description	National Center for Biotechnology Information (NCBI) Organismal Classification	Experimental Factor Ontology	Ontology for Biomedical Investigations	Medical Subject Headings	User defined terms
+INVESTIGATION
+Investigation Identifier	
+Investigation Title	
+Investigation Description	
+Investigation Submission Date	
+Investigation Public Release Date	
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession Number
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name
+Investigation Person First Name
+Investigation Person Mid Initials
+Investigation Person Email
+Investigation Person Phone
+Investigation Person Fax
+Investigation Person Address
+Investigation Person Affiliation
+Investigation Person Roles
+Investigation Person Roles Term Accession Number
+Investigation Person Roles Term Source REF
+STUDY
+Study Identifier	OSD-114
+Study Title	Gene Expression Profile Changes due to Bleomycin-Induced DNA Damage in Human Fibroblasts in Space
+Study Description	To understand gene expression responses in confluent human fibroblast in microgravity conditions to bleomycin treatment. Confluent human fibroblasts AG01522 were flown to the International Space Station (ISS). After three day on ISS, the cells were treated with bleomycin at 1.0 microg/ml for 3 hours. The cells were washed and fixed with RNALater. Total RNA were isolated after the samples were returned to earth and subject to microarray analysis.
+Study Submission Date	19-Jan-2017
+Study Public Release Date	20-Jan-2017
+Study File Name	s_OSD-114.txt
+Comment[Acknowledgments]	
+Comment[DOI]	10.26030/yssj-bg68
+Comment[Data Source Accession]	GSE93860
+Comment[Data Source Link]	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE93860
+Comment[Experiment Platform]	BioCell Habitat
+Comment[Flight Program]	International Space Station (ISS)
+Comment[Funding]	This work was supported by the NASA Fundamental Space Biology Program.
+Comment[Identifiers]	
+Comment[Managing NASA Center]	Ames Research Center (ARC)
+Comment[Mission End]	05/18/2014
+Comment[Mission Link]	https://osdr.nasa.gov/bio/repo/data/missions/SpaceX-3
+Comment[Mission Name]	SpaceX-3
+Comment[Mission Start]	04/18/2014
+Comment[Project Identifier]	Micro-7
+Comment[Project Link]	https://lsda.jsc.nasa.gov/scripts/experiment/exper.aspx?exp_index=13378
+Comment[Project Title]	mRNA Expression Profiles in Cultured Human Fibroblasts in Space
+Comment[Project Type]	Spaceflight study
+Comment[Space Program]	NASA
+Comment[Study Grant Number]	
+STUDY DESIGN DESCRIPTORS
+Study Design Type	transcription profiling by array
+Study Design Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0002768
+Study Design Type Term Source REF	EFO
+STUDY PUBLICATIONS
+Study PubMed ID	28248986
+Study Publication DOI	10.1371/journal.pone.0170358
+Study Publication Author List	Lu T, Zhang Y, Kidane Y, Feiveson A, Stodieck L, Karouia F, Ramesh G, Rohde L, Wu H.
+Study Publication Title	Cellular responses and gene expression profile changes due to bleomycin-induced DNA damage in human fibroblasts in space
+Study Publication Status	published
+Study Publication Status Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0001796
+Study Publication Status Term Source REF	EFO
+Comment[Study Publication Link]	https://www.ncbi.nlm.nih.gov/pubmed/28248986
+STUDY FACTORS
+Study Factor Name	Spaceflight	Treatment
+Study Factor Type	Space Flight	treatment
+Study Factor Type Term Accession Number	http://purl.bioontology.org/ontology/MESH/D013026	http://www.ebi.ac.uk/efo/EFO_0000727
+Study Factor Type Term Source REF	MESH	EFO
+STUDY ASSAYS
+Study Assay File Name	a_OSD-114_transcription-profiling_dna-microarray_Agilent.txt
+Study Assay Measurement Type	transcription profiling
+Study Assay Measurement Type Term Accession Number	http://purl.obolibrary.org/obo/OBI_0000424
+Study Assay Measurement Type Term Source REF	OBI
+Study Assay Technology Type	DNA microarray
+Study Assay Technology Type Term Accession Number	http://purl.obolibrary.org/obo/OBI_0400148
+Study Assay Technology Type Term Source REF	OBI
+Study Assay Technology Platform	Agilent
+STUDY PROTOCOLS
+Study Protocol Name	RNA extraction	labeling	nucleic acid hybridization	data collection	normalization data transformation	sample treatment protocol	sample collection
+Study Protocol Type	RNA extraction	labeling	nucleic acid hybridization	data collection	normalization data transformation	sample treatment protocol	sample collection
+Study Protocol Type Term Accession Number						http://www.ebi.ac.uk/efo/EFO_0003809	
+Study Protocol Type Term Source REF						EFO	EFO
+Study Protocol Description	Total RNA was extracted using Qiagen miRNeasy Mini kits. RNA quality was verified by Nanodrop Spectophotometer and Agilent Bioanalyzer.	Single color labeling with Cyanine-3 (Cy3), using Agilent kit and protocol	Followed Agilent protocol for SurePrint G3 Human Gene Expression v3 8x60K Microarray Kit (G4851). 50 ng of total RNA was used for RNA amplification and labeling according to the Agilent Quick Amp Labeling Kit (for one-color) Protocol Version 6.7, using Agilent Labeling Kit along with an Agilents RNA Spike-In Kit (Agilent). The resulting cRNAs were purified using Qiagen RNeasy mini spin columns and measured again on the Nanodrop for yields (1.1 to 1.5 ug per sample) and dye incorporation (average 13.2 pmol/ug, with 2 of the 15 samples at 7.7 and 9.9 pmol/ug). The samples were then fragmented and 0.6 g of each hybridization mixture was loaded onto the arrays.	The slides were scanned with Agilent Scanner (G2565BA) using Scanner Version C and Scan Control software version A.8.5.1.	The scanned images were processed with Agilent Feature Extraction Software Version 11.0.1.1 to obtain background subtracted and spatially detrended Processed Signal intensities..	"Flight experimental timeline:
+On April 18, 2014, our experimental payload was launched from NASA Kennedy Space Center (KSC) in Florida. The cells were kept at 20°C until they reached the ISS. On April 22, the two habitats containing the cells were then transferred to another CGBA preset at 370 C. On April 25, the cells were removed from the CGBA incubator, and the BioCell cell culture chamber was injected with bleomycin at a final concentration of 1 μg/ml or placebo using the same amount of PBS. This concentration is equivalent to exposure of about 0.4 Gy γ-radiation [31], and resulted in a balanced distribution of three types of DNA damages in our ground experiment (Fig 2). The cells were then transferred back to CGBA. After 3 hr incubation with bleomycin, a total of 8 BioCells containing bleomycin or placebo treated cells were removed from the CGBA, washed with PBS, and fixed with RNALater II at a final concentration of approximately 90%. In addition, one BioCell from each treatment group was washed with PBS and fixed with a final concentration of 2% paraformaldehyde (PFA) for 30 min at room temperature before being washed with PBS.
+
+Ground experiment with different bleomycin concentrations and with cells in different growth conditions:
+Confluent AG1522 cells were treated with bleomycin for concentrations of 0.1, 1 and 10 μg/ml for 3 hrs before fixation with 2% PFA for 30 min in order to obtain a dose response relationship, and to determine the concentration used in the flight experiment. To test whether the differences in cellular responses to bleomycin treatment could be attributed to the cell growth condition, AG1522 cells at confluence or in exponentially growth stage were treated with 1 μg/ml bleomycin for 3 hr as in the flight experiment. Cells in these two growth conditions were also fixed with 2% PFA for 30 min. at room temperature at the end of the 3-hr treatment."	"Immediately after fixation, the samples were transferred to a 4°C refrigerator onboard the ISS. On May 18, 2014, the samples were returned to Earth. The samples were kept at 4° C until they arrived at NASA Johnson Space Center (JSC) in Houston, Texas. Total RNA was then isolated using miRNeasy Mini Kit (Qiagen, Valencia, CA) according to the manufacturer’s protocol. The residual genomic DNA was removed using Qiagen RNase free DNase kit.
+
+Processing of the samples on the ISS was performed by an astronaut using a glove bag. The ground control experiment was performed in the same manner, but with a 6-hour offset from the flight schedule at KSC. Cells fixed with paraformaldehyde from spaceflight and ground experiments were rinsed with 1xPBS. Each cell culture plate was separated into 12 pieces and stored in methanol at -20°C."
+Study Protocol URI							
+Study Protocol Version							
+Study Protocol Parameters Name	QA Instrument					duration;Growth Temperature;Treatment Duration;dose	Storage Temperature Setting
+Study Protocol Parameters Name Term Accession Number						http://www.ebi.ac.uk/efo/EFO_0000433;https://osdr.nasa.gov/;https://osdr.nasa.gov/;http://purl.obolibrary.org/obo/OBI_0000984	
+Study Protocol Parameters Name Term Source REF						EFO;OSD;OSD;OBI	
+Study Protocol Components Name							
+Study Protocol Components Type							
+Study Protocol Components Type Term Accession Number							
+Study Protocol Components Type Term Source REF							
+STUDY CONTACTS
+Study Person Last Name	Lu	Zhang	Yared	Wu
+Study Person First Name	Tao	Ye	K	Honglu
+Study Person Mid Initials				
+Study Person Email	tao.lu@nasa.gov	ye.zhang-1@nasa.gov		honglu.wu-1@nasa.gov
+Study Person Phone	2814839236			
+Study Person Fax				
+Study Person Address	"NASA Johnson Space Center
+Radiation Research
+Lab Tao Lu
+2101 E NASA Pkwy
+Houston, Texas 77058
+USA"			
+Study Person Affiliation	NASA Johnson Space Center	NASA Johnson Space Center		NASA Johnson Space Center
+Study Person Roles	Submitter	Co-Investigator		Principal Investigator
+Study Person Roles Term Accession Number				
+Study Person Roles Term Source REF				
+Comment[Study Person REF]				

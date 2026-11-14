@@ -1,0 +1,115 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	GENEPIO	MESH	EFO	OBI	NCIT	NCBITAXON	SO	UO
+Term Source File	http://data.bioontology.org/ontologies/GENEPIO	http://data.bioontology.org/ontologies/MESH	http://data.bioontology.org/ontologies/EFO	http://data.bioontology.org/ontologies/OBI	http://data.bioontology.org/ontologies/NCIT	http://data.bioontology.org/ontologies/NCBITAXON	http://data.bioontology.org/ontologies/SO	http://data.bioontology.org/ontologies/UO
+Term Source Version	2	13	166	32	52	9	229	43
+Term Source Description	GenEpiO	Medical Subject Headings	Experimental Factor Ontology	Ontology for Biomedical Investigations	National Cancer Institute Thesaurus	National Center for Biotechnology Information (NCBI) Organismal Classification	Sequence Types and Features Ontology	Units of Measurement Ontology
+INVESTIGATION
+Investigation Identifier	
+Investigation Title	
+Investigation Description	
+Investigation Submission Date	
+Investigation Public Release Date	
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession Number
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name
+Investigation Person First Name
+Investigation Person Mid Initials
+Investigation Person Email
+Investigation Person Phone
+Investigation Person Fax
+Investigation Person Address
+Investigation Person Affiliation
+Investigation Person Roles
+Investigation Person Roles Term Accession Number
+Investigation Person Roles Term Source REF
+STUDY
+Study Identifier	OSD-280
+Study Title	Salivary microbiome sequencing of astronauts
+Study Description	This study's goal was to examine if any salivary microbiome changes were observed in astronauts as a result of spaceflight. In addition, this study looked for any microbiome signature that may be associated with viral reactivation in humans
+Study Submission Date	26-Apr-2019
+Study Public Release Date	09-Mar-2020
+Study File Name	s_OSD-280.txt
+Comment[Acknowledgments]	Part of the research described in this publication was carried out at the Jet Propulsion Laboratory, California Institute of Technology, under a contract with NASA. We would like to thank all the astronauts who participated in this study and provided saliva.
+Comment[DOI]	10.26030/q6n1-hh96
+Comment[Data Source Accession]	PRJNA539937
+Comment[Data Source Link]	https://www.ncbi.nlm.nih.gov/bioproject/PRJNA539937/
+Comment[Experiment Platform]	
+Comment[Flight Program]	
+Comment[Funding]	Part of the research described in this publication was carried out at the Jet Propulsion Laboratory, California Institute of Technology, under a contract with NASA. We would like to thank all the astronauts who participated in this study which is funded by the NASA Human Research Program SMO-015 (CS) and NNX12AB02G (HL). This research was also funded by a 2012 Space Biology NNH12ZTT001N grant no. 19-12829-26 under Task Order NNN13D111T award to KV. This grant and NASA Post-doctoral Program sponsored by Space Biology are funded fellowship for CU. © 2019 California Institute of Technology. Government sponsorship acknowledged.
+Comment[Identifiers]	
+Comment[Managing NASA Center]	Jet Propulsion Laboratory (JPL)
+Comment[Mission End]	
+Comment[Mission Link]	
+Comment[Mission Name]	
+Comment[Mission Start]	
+Comment[Project Identifier]	
+Comment[Project Link]	
+Comment[Project Title]	
+Comment[Project Type]	Spaceflight Study
+Comment[Space Program]	
+Comment[Study Grant Number]	19-12829-26 under Task Order NNN13D111T award to KV.
+STUDY DESIGN DESCRIPTORS
+Study Design Type	amplicon sequencing
+Study Design Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0003747
+Study Design Type Term Source REF	EFO
+STUDY PUBLICATIONS
+Study PubMed ID	32312311
+Study Publication DOI	10.1186/s40168-020-00830-z
+Study Publication Author List	"Camilla Urbaniak, Hernan Lorenzi, James Thissen, Crystal Jaing, Brian Crucian, Clarence Sams, Duane Pierson,
+Kasthuri Venkateswaran and Satish Mehta"
+Study Publication Title	The influence of spaceflight on the astronaut salivary microbiome and the search for a microbiome biomarker for viral reactivation
+Study Publication Status	published
+Study Publication Status Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0001796
+Study Publication Status Term Source REF	EFO
+Comment[Study Publication Link]	https://microbiomejournal.biomedcentral.com/articles/10.1186/s40168-020-00830-z#Sec17
+STUDY FACTORS
+Study Factor Name	Spaceflight	Time
+Study Factor Type	Space Flight	time
+Study Factor Type Term Accession Number	http://purl.bioontology.org/ontology/MESH/D013026	http://www.ebi.ac.uk/efo/EFO_0000721
+Study Factor Type Term Source REF	MESH	EFO
+STUDY ASSAYS
+Study Assay File Name	a_OSD-280_amplicon-sequencing_16s_Illumina.txt
+Study Assay Measurement Type	Amplicon Sequencing
+Study Assay Measurement Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0003747
+Study Assay Measurement Type Term Source REF	EFO
+Study Assay Technology Type	16S
+Study Assay Technology Type Term Accession Number	http://purl.bioontology.org/ontology/MESH/D012336
+Study Assay Technology Type Term Source REF	MESH
+Study Assay Technology Platform	Illumina
+STUDY PROTOCOLS
+Study Protocol Name	sample collection	nucleic acid extraction	library construction	nucleic acid sequencing	GeneLab amplicon-seq data processing protocol
+Study Protocol Type	sample collection	nucleic acid extraction	library construction	nucleic acid sequencing	data transformation
+Study Protocol Type Term Accession Number					http://purl.obolibrary.org/obo/OBI_0200000
+Study Protocol Type Term Source REF					EFO
+Study Protocol Description	Saliva samples were collected from 10 male astronauts at  various time points over the course of their mission. The duration of spaceflight ranged from 2–9 months with an  average ISS mission being 4.4 months. Samples were collected (i) two times pre-flight, at 180 days (L-180) and 90 (L-90) days before launch, (ii) three times during flight, at early (1–2months on ISS) and mid (2–4 months on ISS), and late (10 days before landing) time points and (iii) four times post-flight, on landing day (R + 0), 30days (R + 30), 60days (R + 60), and 180days (R + 180) after return. These time points were adjusted (+/− 30days) according to the convenience of crew members. The samples were collected by the astronauts themselves by placing a synthetic polymer swab (Salimetrics LLC, State College, PA) in one’s mouth and swirling it around for 2–3 min until saturation. The samples were stored at − 80 C until ready to process. Once all samples from a given subject was collected, they were thawed and then centrifuged at x1400g for 5 min to separate the fluid from the swab. The separated fluid was stored at − 80 C until DNA extraction and the swab discarded.	The frozen fluid was allowed to thaw on ice and then vortexed and centrifuged at ×16,000g for 20 min to make a cell pellet at the bottom of the tube. The supernatant was discarded, and the cell pellet was re-suspended in 200 uL PBS. DNA was extracted from this re-suspended pellet with a QIA-Amp DNA kit (Qiagen; Germantown, MD). DNA concentration was determined with the NanoDrop ND-1000 spectrophotometer (NanoDrop Technologies, Inc. Wilmington, DE).	"The V3/V4 region (~ 460bp) of the isolated genomic DNA was paired-end sequenced (2 × 300 bp) on the Illumina Mi-Seq platform following the protocol outlined by Illumina (https://support.illumina.com/documents/documentation/chemistry_documentation/16s/16s-metagenomic-library-prep-guide-15044223-b.pdf). To summarize, amplicon PCR was performed by adding 2.5ul of 5 ng/ul of DNA to 5 ul of 1uM Forward primer, 5ul of 1uM reverse primer, and 12.5 ul of 2× KAPA HiFi HotStart ReadyMix. Forward primer sequences are 5′TCGTCGGCAGCGTCAGATGTGTATAAGAGA-CAGCCTACGGGNGGCWGCAG 3′. Reverse primer sequences are 5′GTCTCGTGGGCTCGGAGATGGTA-TAAGAGACAGGACTACHVGGGTATCTAATCC 3′.
+The PCR condition were as follows: 95 C for 3min followed by 25 cycles of 95 C for 30 s, 55 C for 30s, and 72 C for 30s. A final elongation step was performed at 72 C for 5min.
+Following quality control and PCR clean up, index PCR was set up with the Nextera XT index kit and a limited-cycle amplification (8 cycles) to attach dual indices and adapters to the amplicons. The library was quantified using Qubit and normalized to 4 nM for all samples, after which all samples were pooled together."	The pooled library was loaded onto the sequencer at 6pM with 10% phiX spiked in. The Miseq run utilized the v3 chemistry and 2 × 300 cycle sequencing kit (MS-102-3003). Samples were demultiplexed and adaptors removed using bcl2fastq from Illumina.	Quality assessment of reads was performed with FastQC v0.11.8 and reports were combined with MultiQC v1.7. Primers were removed with cutadapt v2.3. DADA2 v1.12 was utilized for quality-trimming and filtering and inference of amplicon sequence variants (ASVs), and taxonomy was assigned with DECIPHER v2.14 using the SILVA r138 reference database.
+Study Protocol URI					
+Study Protocol Version					
+Study Protocol Parameters Name	Storage Temperature Setting;Subject ID;Sample Collection Timepoint;Sample Storage Temperature		library selection;library layout;library strategy;Primer Info;Target Molecule Region	sequencing instrument;base caller;quality scorer;read length	README;Raw Sequence Data;Read Depth;trimmed sequence data;Filtered Sequence Data;FastQC Outputs;Final Output;Processing Info
+Study Protocol Parameters Name Term Accession Number	;;;		;;;;https://osdr.nasa.gov/	;;;http://purl.obolibrary.org/obo/GENEPIO_0000076	;;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C155320;http://purl.obolibrary.org/obo/OBI_0002569;;;;
+Study Protocol Parameters Name Term Source REF	;;;		;;;;	;;;GENEPIO	;;NCIT;OBI;;;;
+Study Protocol Components Name					
+Study Protocol Components Type					
+Study Protocol Components Type Term Accession Number					
+Study Protocol Components Type Term Source REF					
+STUDY CONTACTS
+Study Person Last Name	Urbaniak	Venkateswaran	Lorenzi	Thissen	Jaing	Crucian	Sams	Pierson	Mehta
+Study Person First Name	Camilla	Kasthuri	Hernan	James	Crystal	Brian	Clarence	Duane	Satish
+Study Person Mid Initials		J							
+Study Person Email		kjvenkat@jpl.nasa.gov							
+Study Person Phone		(818) 393-1481							
+Study Person Fax		(818) 3934176							
+Study Person Address		4800 Oak Grove Dr., Pasadena, CA 91109							
+Study Person Affiliation	NASA Jet Propulsion Laboratory	NASA Jet Propulsion Laboratory	NASA Johnson Space Center	Lawrence Livermore National Laboratory	Lawrence Livermore National Laboratory	NASA Johnson Space Center	NASA Johnson Space Center	NASA Johnson Space Center	NASA Johnson Space Center
+Study Person Roles		principal investigator							
+Study Person Roles Term Accession Number		http://www.ebi.ac.uk/efo/EFO_0009736							
+Study Person Roles Term Source REF		EFO							
+Comment[Study Person REF]									

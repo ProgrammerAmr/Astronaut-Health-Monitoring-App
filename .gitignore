@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Environment & local secrets
+.env
+AI_training/.env
+backend/.env
+
+# Vector DB & local AI artifacts
+AI_training/chroma_db/
+csm_artifacts/
+audit_outputs/
+
+# Large external datasets (must stay outside Git per docs/DATA_AND_DELIVERABLES.md §5)
+local_nasa_csm/
+data/external/nasa_csm/raw/
+data/external/nasa_csm/*.zip
+data/external/nasa_csm/*.csv
+*.zip
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

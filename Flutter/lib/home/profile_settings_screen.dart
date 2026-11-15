@@ -184,85 +184,87 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               const SizedBox(height: 18),
 
               // Display & Local Preferences Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
+              Material(
+                color: AppColors.white,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.border),
+                  side: const BorderSide(color: AppColors.border),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'DISPLAY & LOCAL PREFERENCES',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile.adaptive(
-                      key: const Key('toggle_fahrenheit_switch'),
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text(
-                        'Show Temperature in Fahrenheit (°F)',
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'DISPLAY & LOCAL PREFERENCES',
                         style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.navy,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                          color: AppColors.primary,
                         ),
                       ),
-                      subtitle: Text(
-                        prefs.useFahrenheit
-                            ? 'Currently displaying temperatures in °F'
-                            : 'Currently displaying temperatures in °C',
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.grey,
-                        ),
-                      ),
-                      value: prefs.useFahrenheit,
-                      onChanged: controller == null
-                          ? null
-                          : (val) => _updatePrefs(
-                                controller,
-                                prefs.copyWith(useFahrenheit: val),
-                              ),
-                    ),
-                    if (isDemo) ...[
-                      const Divider(color: AppColors.border, height: 1),
+                      const SizedBox(height: 8),
                       SwitchListTile.adaptive(
-                        key: const Key('toggle_auto_alerts_switch'),
+                        key: const Key('toggle_fahrenheit_switch'),
                         contentPadding: EdgeInsets.zero,
                         title: const Text(
-                          'Auto-Generate Local Demo Threshold Alerts',
+                          'Show Temperature in Fahrenheit (°F)',
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w600,
                             color: AppColors.navy,
                           ),
                         ),
-                        subtitle: const Text(
-                          'When logging out-of-range vitals in Demo Mode, create a clearly labeled local [DEMO] reminder.',
-                          style: TextStyle(
+                        subtitle: Text(
+                          prefs.useFahrenheit
+                              ? 'Currently displaying temperatures in °F'
+                              : 'Currently displaying temperatures in °C',
+                          style: const TextStyle(
                             fontSize: 12.5,
                             color: AppColors.grey,
                           ),
                         ),
-                        value: prefs.autoThresholdAlerts,
+                        value: prefs.useFahrenheit,
                         onChanged: controller == null
                             ? null
                             : (val) => _updatePrefs(
                                   controller,
-                                  prefs.copyWith(autoThresholdAlerts: val),
+                                  prefs.copyWith(useFahrenheit: val),
                                 ),
                       ),
+                      if (isDemo) ...[
+                        const Divider(color: AppColors.border, height: 1),
+                        SwitchListTile.adaptive(
+                          key: const Key('toggle_auto_alerts_switch'),
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Auto-Generate Local Demo Threshold Alerts',
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.navy,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'When logging out-of-range vitals in Demo Mode, create a clearly labeled local [DEMO] reminder.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                          value: prefs.autoThresholdAlerts,
+                          onChanged: controller == null
+                              ? null
+                              : (val) => _updatePrefs(
+                                    controller,
+                                    prefs.copyWith(autoThresholdAlerts: val),
+                                  ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
 
@@ -326,89 +328,91 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               const SizedBox(height: 18),
 
               // Backend & Session Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
+              Material(
+                color: AppColors.white,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.border),
+                  side: const BorderSide(color: AppColors.border),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'BACKEND & SESSION',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      key: const Key('settings_server_config_btn'),
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.dns_outlined,
-                        color: AppColors.primary,
-                      ),
-                      title: const Text(
-                        'Configure Production Server URL',
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'BACKEND & SESSION',
                         style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.navy,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                          color: AppColors.primary,
                         ),
                       ),
-                      subtitle: Text(
-                        serverUrl.isNotEmpty
-                            ? serverUrl
-                            : (isDemo
-                                ? 'Not configured (bypassed in Offline Demo Mode)'
-                                : 'Not configured'),
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.grey,
+                      const SizedBox(height: 8),
+                      ListTile(
+                        key: const Key('settings_server_config_btn'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(
+                          Icons.dns_outlined,
+                          color: AppColors.primary,
                         ),
-                      ),
-                      trailing: const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.grey,
-                      ),
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.serverConfig);
-                      },
-                    ),
-                    const Divider(color: AppColors.border, height: 1),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        key: const Key('settings_logout_btn'),
-                        onPressed: (_busy || controller == null)
-                            ? null
-                            : () => _handleExitOrLogout(controller),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFB42318),
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                        title: const Text(
+                          'Configure Production Server URL',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.navy,
                           ),
                         ),
-                        icon: Icon(
-                          isDemo ? Icons.exit_to_app : Icons.logout,
-                          size: 18,
+                        subtitle: Text(
+                          serverUrl.isNotEmpty
+                              ? serverUrl
+                              : (isDemo
+                                  ? 'Not configured (bypassed in Offline Demo Mode)'
+                                  : 'Not configured'),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.grey,
+                          ),
                         ),
-                        label: Text(
-                          isDemo ? 'Exit Demo Mode' : 'Sign Out',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.grey,
+                        ),
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.serverConfig);
+                        },
+                      ),
+                      const Divider(color: AppColors.border, height: 1),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          key: const Key('settings_logout_btn'),
+                          onPressed: (_busy || controller == null)
+                              ? null
+                              : () => _handleExitOrLogout(controller),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB42318),
+                            foregroundColor: AppColors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: Icon(
+                            isDemo ? Icons.exit_to_app : Icons.logout,
+                            size: 18,
+                          ),
+                          label: Text(
+                            isDemo ? 'Exit Demo Mode' : 'Sign Out',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

@@ -1,0 +1,115 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	EFO	OBI	NCIT	MESH	CL	UO
+Term Source File	http://data.bioontology.org/ontologies/EFO	http://data.bioontology.org/ontologies/OBI	http://data.bioontology.org/ontologies/NCIT	http://data.bioontology.org/ontologies/MESH	http://data.bioontology.org/ontologies/CL	http://data.bioontology.org/ontologies/UO
+Term Source Version	166	32	52	5	63	43
+Term Source Description	Experimental Factor Ontology	Ontology for Biomedical Investigations	National Cancer Institute Thesaurus	Medical Subject Headings	Cell Ontology	Units of Measurement Ontology
+INVESTIGATION
+Investigation Identifier	
+Investigation Title	
+Investigation Description	
+Investigation Submission Date	
+Investigation Public Release Date	
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession Number
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name
+Investigation Person First Name
+Investigation Person Mid Initials
+Investigation Person Email
+Investigation Person Phone
+Investigation Person Fax
+Investigation Person Address
+Investigation Person Affiliation
+Investigation Person Roles
+Investigation Person Roles Term Accession Number
+Investigation Person Roles Term Source REF
+STUDY
+Study Identifier	OSD-52
+Study Title	Expression data from SPHINX (SPaceflight of Huvec: an INtegrated eXperiment)
+Study Description	Changes in the physical environment modulate cell responses and may lead to the impairment or even failure of tissue function as a result of mechanotransduction processes. It has been suggested that this situation occurs in some age-related diseases and some pathological conditions observed in space, such as cardiovascular deconditioning, bone loss, muscle atrophy, and impaired immune responses. All of these are associated with endothelial dysfunction but the precise mechanism is still unclear. We used the microarray approach to obtain insights into the mechanism responsible for endothelial dysfunction by taking advantage of the challenging environment of gravitational unloading onboard the International Space Station. The effects of gravitational unloading on HUVEC gene expression were investigated by means of cDNA microarray analyses of six randomly chosen samples (three for each of the two conditions of spaceflight and 1g) using Affymetrix Gene Human 1.0 ST Arrays
+Study Submission Date	17-Jan-2013
+Study Public Release Date	20-Jan-2013
+Study File Name	s_OSD-52.txt
+Comment[Acknowledgments]	The authors thank the European Space Research and Technology Centre (ESTEC) Life Science Instrumentation Laboratory, User Support Operation Centre (USOC; Zurich, Switzerland); Thales Alenia Space (Turin, Italy); Kayser Italia (Livorno, Italy); S. P. Korolyov Rocket and Space Corp. Energia (Moscow, Russia); and European Space Agency (ESA) Office (Moscow, Russia) for technical and logistic support.
+Comment[DOI]	10.26030/nt3p-p547
+Comment[Data Source Accession]	E-GEOD-43582
+Comment[Data Source Link]	http://www.ebi.ac.uk/arrayexpress/experiments/E-GEOD-43582/
+Comment[Experiment Platform]	Opticell
+Comment[Flight Program]	International Space Station (ISS)
+Comment[Funding]	ESA, ASI
+Comment[Identifiers]	
+Comment[Managing NASA Center]	
+Comment[Mission End]	11/25/2010
+Comment[Mission Link]	https://osdr.nasa.gov/bio/repo/data/missions/Expedition 25
+Comment[Mission Name]	Expedition 25
+Comment[Mission Start]	10/08/2010
+Comment[Project Identifier]	SPHINX
+Comment[Project Link]	http://eea.spaceflight.esa.int/portal/exp/?id=9246
+Comment[Project Title]	SPaceflight of Huvec: an Integrated Xperiment
+Comment[Project Type]	Spaceflight Study
+Comment[Space Program]	ESA
+Comment[Study Grant Number]	ESA-ESTEC contract 4200014651, ASI contract I/048/10/0
+STUDY DESIGN DESCRIPTORS
+Study Design Type	transcription profiling by array
+Study Design Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0002768
+Study Design Type Term Source REF	EFO
+STUDY PUBLICATIONS
+Study PubMed ID	23913861	30717456
+Study Publication DOI	10.1096/fj.13-229195	10.3390/ijms20030661
+Study Publication Author List	Versari S, Longinotti G, Barenghi L, Maier JA, Bradamante S.	Beheshti A, McDonald JT, Miller J, Grabham P, Costes SV
+Study Publication Title	"The challenging
+environment on board the International Space Station affects endothelial cell
+function by triggering oxidative stress through thioredoxin interacting protein
+overexpression: the ESA-SPHINX experiment."	GeneLab Database Analyses Suggest Long-Term Impact of Space Radiation on the Cardiovascular System by the Activation of FYN Through Reactive Oxygen Species
+Study Publication Status	published	published
+Study Publication Status Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0001796	http://www.ebi.ac.uk/efo/EFO_0001796
+Study Publication Status Term Source REF	EFO	EFO
+Comment[Study Publication Link]	http://www.ncbi.nlm.nih.gov/pubmed/23913861	https://www.ncbi.nlm.nih.gov/pubmed/30717456
+STUDY FACTORS
+Study Factor Name	Spaceflight
+Study Factor Type	Space Flight
+Study Factor Type Term Accession Number	http://purl.bioontology.org/ontology/MESH/D013026
+Study Factor Type Term Source REF	MESH
+STUDY ASSAYS
+Study Assay File Name	a_OSD-52_transcription-profiling_dna-microarray_affymetrix.txt
+Study Assay Measurement Type	transcription profiling
+Study Assay Measurement Type Term Accession Number	obo:OBI_0000424
+Study Assay Measurement Type Term Source REF	
+Study Assay Technology Type	DNA microarray
+Study Assay Technology Type Term Accession Number	obo:OBI_0400147
+Study Assay Technology Type Term Source REF	
+Study Assay Technology Platform	Affymetrix
+STUDY PROTOCOLS
+Study Protocol Name	P-GSE43582-3	P-GSE43582-2	P-GSE43582-4	P-GSE43582-5	P-GSE43582-6	P-GSE43582-7	GeneLab microarray data processing protocol
+Study Protocol Type	grow	specified_biomaterial_action	nucleic_acid_extraction	labeling	hybridization	image_aquisition	data transformation
+Study Protocol Type Term Accession Number							http://purl.obolibrary.org/obo/OBI_0200000
+Study Protocol Type Term Source REF	OBI	OBI	OBI	OBI	OBI	OBI	OBI
+Study Protocol Description	SPHINX was launched with Progress 40P and, as soon as docking was complete (four days after launch, T0), the experiment was started inside a KUBIC incubator on the ISS. Timeline: T0: installation in KUBIK; T0 + 7 hrs: first medium exchange; T0 + 91 hrs: second medium exchange; T0 + 167 hrs: third medium exchange with PBS. The experiment was stopped by means of two subsequent RNAlater fixations separated by an interval of six minutes. After the experiment had been completed, the samples were kept at 6°C inside the KUBIK incubator before being returned to Earth on Soyuz 23S. Twelve control experiments were carried out in parallel using the same hardware and experimental protocol.	Samples were preserved in RNAlater and mantained at 6°C before analyses	HUVEC, preserved in RNAlater solution, were subjected to total RNA extraction following the double extraction protocol: RNA isolation by acid guanidinium thiocyanate-phenol-chloroform extraction (Trizol Invitrogen) followed by a Qiagen RNeasy clean-up procedure.	Biotinylated cRNA were prepared according to the standard Affymetrix protocol from 150 ug total RNA	Hybridization was performed using the GeneChip Hybridization, Wash and Stain Kit. GeneChip cartridges were washed and stained with GeneChip Hybridization, Wash and Stain Kit in the Affymetrix Fluidics Station 450 following the FS450_0007 standard protocol	GeneChip arrays were scanned using an Affymetrix GeneChip Scanner 3000 7G using default parameters	Data were processed as described in GL-DPPD-7114 (https://github.com/nasa/GeneLab_Data_Processing/blob/master/Microarray/Affymetrix/Pipeline_GL-DPPD-7114_Versions/GL-DPPD-7114.md) using NF_MAAffymetrix version 1.0.5 (https://github.com/nasa/GeneLab_Data_Processing/tree/NF_MAAffymetrix_1.0.5/Microarray/Affymetrix/Workflow_Documentation/NF_MAAffymetrix). In short, a RunSheet containing raw data file location and processing metadata from the study's *ISA.zip file was generated using dp_tools (version 1.3.4). The raw array data files were loaded into R (version 4.1.3) using oligo (version 1.58.0). Raw data quality assurance density plot, pseudo images, MA plots, and boxplots were generated using oligo (version 1.58.0). The raw probe level intensity data was background corrected and normalized across arrays via the oligo (version 1.58.0) quantile method. Normalized probe level data quality assurance density plot, pseudo images, MA plots, and boxplots were generated using oligo (version 1.58.0). Normalized probe level data was summarized to the probeset level using the oligo (version 1.58.0) RMA method. Ensembl gene ID mappings were retrieved for each probeset using biomaRt (version 2.50.0), Ensembl database (ensembl.org, release 107). Differential expression analysis was performed in R (version 4.1.3) using limma (version 3.50.3); all groups were compared pairwise for each probeset to generate a moderated t-statistic and associated p- and adjusted p-value. Gene annotations were assigned for every probeset that mapped to exactly one Ensembl gene ID using the custom annotation tables generated in-house as detailed in GL-DPPD-7110 (https://github.com/nasa/GeneLab_Data_Processing/blob/GL_RefAnnotTable_1.0.0/GeneLab_Reference_Annotations/Pipeline_GL-DPPD-7110_Versions/GL-DPPD-7110/GL-DPPD-7110.md), with STRINGdb (version 2.8.4), PANTHER.db (version 1.0.11), and org.Hs.eg.db (version 3.15.0).
+Study Protocol URI							
+Study Protocol Version							
+Study Protocol Parameters Name	duration	Sample Preservation Method;Sample Storage Temperature			Hybridization Assay Name		Raw Intensities Table;Normalized Expression Table;differential expression analysis data
+Study Protocol Parameters Name Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0000433	https://osdr.nasa.gov/;https://osdr.nasa.gov/			https://osdr.nasa.gov/		https://osdr.nasa.gov/;https://osdr.nasa.gov/;http://purl.obolibrary.org/obo/OBI_0002584
+Study Protocol Parameters Name Term Source REF	EFO	;					;;OBI
+Study Protocol Components Name							
+Study Protocol Components Type							
+Study Protocol Components Type Term Accession Number							
+Study Protocol Components Type Term Source REF							
+STUDY CONTACTS
+Study Person Last Name	Bradamante	Versari	Longinotti	Barenghi	Maier
+Study Person First Name	Silvia	Silvia	Giulia	Livia	Jeanette
+Study Person Mid Initials					
+Study Person Email	silvia.bradamante@istm.cnr.it				
+Study Person Phone	3.90E+11				
+Study Person Fax					
+Study Person Address	CNR-ISTM, Institute of Molecular Science and Technology, Via Golgi 19, Milan, Italy				
+Study Person Affiliation	CNR-ISTM, Institute of Molecular Science and Technology				
+Study Person Roles	submitter				
+Study Person Roles Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0001741				
+Study Person Roles Term Source REF	EFO				
+Comment[Study Person REF]					

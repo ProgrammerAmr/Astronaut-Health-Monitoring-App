@@ -1,0 +1,114 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	EFO	NCIT	OBI	CRO	MESH	RBO
+Term Source File	http://data.bioontology.org/ontologies/EFO		http://data.bioontology.org/ontologies/OBI			
+Term Source Version	132		29			
+Term Source Description	Experimental Factor Ontology		Ontology for Biomedical Investigations			
+INVESTIGATION
+Investigation Identifier	
+Investigation Title	
+Investigation Description	
+Investigation Submission Date	
+Investigation Public Release Date	
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession Number
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name
+Investigation Person First Name
+Investigation Person Mid Initials
+Investigation Person Email
+Investigation Person Phone
+Investigation Person Fax
+Investigation Person Address
+Investigation Person Affiliation
+Investigation Person Roles
+Investigation Person Roles Term Accession Number
+Investigation Person Roles Term Source REF
+STUDY
+Study Identifier	OSD-575
+Study Title	SpaceX Inspiration4 Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays (Comprehensive Metabolic Panel and Multiplex)
+Study Description	The SpaceX Inspiration4 mission was a 3-day mission with four private astronauts to low Earth orbit that occurred in September 2021. The crew collected biospecimen samples before, during, and after flight. One of these biospecimen collections included whole blood collected via venipuncture, with serum extracted from blood using a serum separator tube (SST). Samples were collected pre-flight (L-92, L-44, L-3) and post-flight (R+1, R+45, R+82). Serum samples were submitted for immune and cardiovascular cytokine biomarker profiling panels at two different companies (Eve Technologies and Alamar), and to Quest Diagnostics for comprehensive metabolic panel testing. Data was used to measure changes in cytokines and metabolic measures during spaceflight. This study derives results from the Comprehensive Metabolic Panel and Multiplex assays, and the blood serum data in this study are related to other studies using data from the same experiment; OSD-569 (whole blood), OSD-570 (peripheral blood mononuclear cells), OSD-571 (plasma), OSD-572 (skin, oral, and nasal swabs),  OSD-573 (Dragon capsule samples), OSD-574 (skin biopsy), OSD-656 (urine), and OSD-630 (stool).
+Study Submission Date	05-Dec-2022
+Study Public Release Date	14-May-2024
+Study File Name	s_OSD-575.txt
+Comment[Acknowledgments]	Thanks to the WorldQuant Foundation, NASA , the National Institutes of Health (R01MH117406, P01CA214274 R01CA249054), the LLS (MCL7001-18, LLS 9238-16), and the GI Research Foundation (GIRF).
+Comment[DOI]	10.26030/mc5d-p710
+Comment[DOI]	10.26030/mc5d-p710
+Comment[DOI]	10.26030/mc5d-p710
+Comment[Data Source Accession]	
+Comment[Data Source Link]	
+Comment[Experiment Platform]	
+Comment[Flight Program]	
+Comment[Funding]	Funding provided by NASA, NIH, and philanthropic donations NNX14AH50G, NNX17AB26G, 80NSSC22K0254, NNH18ZTT001N-FG2, NNX16AO69A
+Comment[Identifiers]	
+Comment[Managing NASA Center]	
+Comment[Mission End]	09/18/2021
+Comment[Mission Link]	https://osdr.nasa.gov/bio/repo/data/missions/SpaceX Inspiration4
+Comment[Mission Name]	SpaceX Inspiration4
+Comment[Mission Start]	09/16/2021
+Comment[Project Identifier]	Inspiration4 Crew
+Comment[Project Link]	
+Comment[Project Title]	
+Comment[Project Type]	Spaceflight Study
+Comment[Space Program]	
+Comment[Study Grant Number]	
+STUDY DESIGN DESCRIPTORS
+Study Design Type	low Earth orbit
+Study Design Type Term Accession Number	http://purl.obolibrary.org/obo/RBO_00000019
+Study Design Type Term Source REF	RBO
+STUDY PUBLICATIONS
+Study PubMed ID			
+Study Publication DOI	10.1038/s41586-024-07639-y	10.1038/s41467-024-48806-z	10.17504/protocols.io.81wgbxxo1lpk/v1
+Study Publication Author List	Eliah G. Overbey, Braden T. Tierney, JangKeun Kim, Kirill Grigorev, Jiwoon Park, Nadia Houerbi, Sebastian Garcia Medina, Cem Meydan, Namita Damle, Deena Najjar, Evan E. Afshin, Krista A. Ryon, Karolina Sienkiewicz, Laura Patras, Remi Klotz, Veronica Ortiz, Matthew MacKay, Annalise Schweickart, Maria A. Sierra, Ezequiel Dantas, Theodore Nelson, Egle Cekanaviciute, Gabriel Deards, Jonathan Foox, S. Anand Narayanan, Caleb M. Schmidt, Michael A. Schmidt, Julian C. Schmidt, Sean Mullane, Seth Stravers Tigchelaar, Steven Levitte, Craig Westover, Chandrima Bhattacharya, Serena Lucotti, Daniel J. Butler, Doru Paul, Christopher Mozsary, Lauren M. Sanders, Lynn E. Taylor, Chintan O. Patel, Sharib A. Khan, Mir Suhail, Syed G. Byhaqui, Burhan Aslam, Aaron S Gajadhar, Lucy Williamson, Purvi Tandel, Qiu Yang, Jessica Chu, Ryan Benz, Asim Siddiqui, Daniel Hornburg, Kelly Blease, Juan Moreno, Andrew Boddicker, Junhua Zhao, Bryan Lajoie, Ryan T. Scott, Andrew Altomare, Semyon Kruglyak, Shawn Levy, Briana M. Hudson, Aric Rininger, Sarah E. Church, Afshin Beheshti, George M. Church, Scott M. Smith, Brian E. Crucian, Sara R. Zwart, Francine Garrett-Bakelman, Jan Krumsiek, Qiuying Chen, Dawson Miller, Steven Gross, Kelly L. Bolton, Susan M. Bailey, Richard Granstein, Ari M. Melnick, Bader Shirah, Sylvain V. Costes, Irina Matei, David C. Lyden, Min Yu, Anil S. Menon, Jaime Mateus, Christopher E. Mason	Eliah G. Overbey, Krista Ryon, JangKeun Kim, Braden Tierney, Remi Klotz, Veronica Ortiz, Sean Mullane, Julian C. Schmidt, Matthew MacKay, Namita Damle, Deena Najjar, Irina Matei, Laura Patras, J. Sebastian Garcia Medina, Ashley Kleinman, Jeremy Wain Hirschberg, Jacqueline Proszynski, S. Anand Narayanan, Caleb M. Schmidt, Evan E. Afshin, Lucinda Innes, Mateo Mejia Saldarriaga, Michael A. Schmidt, Richard D. Granstein, Bader Shirah, Min Yu, David Lyden, Jaime Mateus, Christopher E. Mason	Eliah G. Overbey, Krista A. Ryon, JangKeun Kim, Christopher E. Mason
+Study Publication Title	The Space Omics and Medical Atlas (SOMA) and international astronaut biobank	Collection of Biospecimens from the Inspiration4 Mission Establishes the Standards for the Space Omics and Medical Atlas (SOMA)	CAMbank: SST Field Processing v1
+Study Publication Status	published	published	published
+Study Publication Status Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0001796	http://www.ebi.ac.uk/efo/EFO_0001796	http://www.ebi.ac.uk/efo/EFO_0001796
+Study Publication Status Term Source REF	EFO	EFO	EFO
+Comment[Study Publication Link]			 https://www.protocols.io/view/cambank-sst-field-processing-v1-cyzzxx76
+STUDY FACTORS
+Study Factor Name	Time	Spaceflight
+Study Factor Type	time	Space Flight
+Study Factor Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0000721	http://purl.bioontology.org/ontology/MESH/D013026
+Study Factor Type Term Source REF	EFO	MESH
+STUDY ASSAYS
+Study Assay File Name	a_OSD-575_immunoassay_multiplex_Eve Technologies Panel HDCVD9.txt	a_OSD-575_immunoassay_multiplex_Eve Technologies Panel HD71.txt	a_OSD-575_immunoassay_multiplex_Alamar Biosciences.txt	a_OSD-575_analytical-chemistry_comprehensive-metabolic-panel_quest diagnostics.txt
+Study Assay Measurement Type	Immunoassay	Immunoassay	Immunoassay	Analytical Chemistry
+Study Assay Measurement Type Term Accession Number	http://purl.bioontology.org/ontology/MESH/D007118	http://purl.bioontology.org/ontology/MESH/D007118	http://purl.bioontology.org/ontology/MESH/D007118	http://purl.bioontology.org/ontology/MESH/D002623
+Study Assay Measurement Type Term Source REF			MESH	MESH
+Study Assay Technology Type	Multiplex	Multiplex	Multiplex	Comprehensive Metabolic Panel
+Study Assay Technology Type Term Accession Number	http://purl.obolibrary.org/obo/ECO_0001102	http://purl.obolibrary.org/obo/ECO_0001102	http://purl.obolibrary.org/obo/ECO_0001102	http://purl.obolibrary.org/obo/MMO_0000698
+Study Assay Technology Type Term Source REF				
+Study Assay Technology Platform	Eve Technologies Panel HDCVD9	Eve Technologies Panel HD71	Alamar Biosciences	Quest Diagnostics
+STUDY PROTOCOLS
+Study Protocol Name	ALSDA Transformed Data	Sample Preparation - Alamar Biosciences	Assay Information - Alamar Biosciences	Sample Preparation - Immune HD71	Assay Information - Immune HD71	Sample Preparation - Cardiovascular HDCVD9	Assay Information - Cardiovascular HDCVD9	Treatment Protocol	sample collection	Comprehensive Metabolic Panel
+Study Protocol Type	data transformation	Sample Preparation	Assay Information	Sample Preparation	Assay Information	Sample Preparation	Assay Information	Treatment Protocol	sample collection	Comprehensive Metabolic Panel
+Study Protocol Type Term Accession Number	http://purl.obolibrary.org/obo/OBI_0200000							https://osdr.nasa.gov/		
+Study Protocol Type Term Source REF	OBI	OBI	OBI	OBI	OBI	OBI	OBI	OBI	OBI	OBI
+Study Protocol Description	To enable maximal data reuse (for machine-readable approaches), the submitted version of this dataset was subsequently transformed and edited to be aligned with a reusable template, which was created through feedback provided by subject matter experts in the ALSDA Analysis Working Group. This transformed reusable version is structured so all results are standardized into specific rows (source/subject) and columns (measures). This enables all assay results to be identically structured for efficient data mining.	Frozen serum aliquots were shipped to Alamar Biosciences (Fremont, CA).	The NULISA-seq Inflammation Panel was performed, which targets 124 cytokines/chemokines and 80 other proteins related to immune response. NGS data were processed using the NULISAseq algorithm (Alamar Biosciences). The sample- (SMI) and target-specific (TMI) barcodes were quantified, and up to two mismatching bases or one indel and one mismatch were allowed. Intraplate normalization was performed by dividing the target counts for each sample well by that well’s internal control (mCherry) counts. Interplate normalization was performed using interplate control (IPC) normalization, in which counts were divided by target-specific medians of the three IPC wells on that plate, and then rescaled by the factor 10^4. To facilitate statistical analyses, IPC-normalized counts were log2-transformed to form a more normal distribution. These log2 IPC-normalized counts are referred to as NULISA Protein Quantification (NPQ) units. Methods for data processing and normalization were extracted from Feng et al 2023 (https://www.biorxiv.org/content/10.1101/2023.04.09.536130v2.full.pdf).	Frozen serum samples were submitted to Eve Technologies (Calgary, Canada) for biomarker profiling.	The biomarker profiling panel Human Cytokine/Chemokine 71-Plex Discovery Assay® Array (HD71) was used. Concentration values were extrapolated using a 4 of 5 parameter logic standard curve. Measurements were normalized by average of pre-flight values from all crew.	Frozen serum samples were submitted to Eve Technologies (Calgary, Canada) for biomarker profiling.	The biomarker profiling panel Human Cardiovascular Disease Panel 3 9-Plex Discovery Assay® Array (HDCVD9) was used. Concentration values were extrapolated using a 4 of 5 parameter logic standard curve. Measurements were normalized by average of pre-flight values from all crew.	All subjects were consented at an informed consent briefing (ICB) at SpaceX (Hawthorne, CA), and samples were collected and processed under the approval of the Institutional Review Board (IRB) at Weill Cornell Medicine, under Protocol 21-05023569. All crew members have consented for data and sample sharing. We analyzed samples before and after a 3-day mission to space.	Serum separator tubes (SSTs, BD Biosciences:  367987) were spun at 1300xg for 10 minutes. Fresh serum was sent at room temperature to Quest Diagnostics for a comprehensive metabolic panel (CMP). The remaining serum was frozen at -80C.	Fresh serum was submitted to Quest Diagnostics (test code 10231) and run on a Beckman Coulter AU5800.
+Study Protocol URI										
+Study Protocol Version										
+Study Protocol Parameters Name	Submitted Results File;Transformed Files	Type Of Sample;Sample Storage Temperature	Name Of Kit;Company Name;Number Of Targets	Type Of Sample;Sample Storage Temperature	Name Of Kit;Company Name	Type Of Sample;Sample Storage Temperature	Name Of Kit;Company Name		Sample Preservation Method;Sample Storage Temperature	Sample Storage Temperature;Analyzer Device Name Brand Version
+Study Protocol Parameters Name Term Accession Number	https://osdr.nasa.gov/;https://osdr.nasa.gov/	;	;;	;	;	;	;		https://genelab-data.ndc.nasa.gov/;https://genelab-data.ndc.nasa.gov/	;
+Study Protocol Parameters Name Term Source REF	;	;	;;	;	;	;	;		;	;
+Study Protocol Components Name										
+Study Protocol Components Type										
+Study Protocol Components Type Term Accession Number										
+Study Protocol Components Type Term Source REF										
+STUDY CONTACTS
+Study Person Last Name	Mason	Overbey	Grigorev	Nelson
+Study Person First Name	Christopher	Eliah	Kirill	Theodore
+Study Person Mid Initials	E	G		M
+Study Person Email	chm2042@med.cornell.edu	elo4004@med.cornell.edu	kig2007@med.cornell.edu	tmn2126@columbia.edu
+Study Person Phone				
+Study Person Fax				
+Study Person Address				
+Study Person Affiliation	Weill Cornell Medicine, BioAstra, WorldQuant Initiative for Quantitative Prediction	Weill Cornell Medicine, BioAstra	Weill Cornell Medicine	Columbia University
+Study Person Roles	principal investigator	co-investigator	formal analysis role	formal analysis role
+Study Person Roles Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0009736	http://www.ebi.ac.uk/efo/EFO_0009735	http://purl.org/credit/ontology	http://purl.org/credit/ontology
+Study Person Roles Term Source REF	EFO	EFO	CRO	CRO
+Comment[orcidIdentifier]	0000-0002-1850-1642	0000-0002-2866-8294		

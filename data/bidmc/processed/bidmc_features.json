@@ -1,0 +1,2716 @@
+{
+    "dataset": "BIDMC PPG and Respiration",
+    "total_recordings": 53,
+    "quality_threshold_percent": 80,
+    "usage": "Research and software prototype only. Not for medical diagnosis.",
+    "recordings": [
+        {
+            "recording_id": "bidmc_01",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 91.318,
+                    "median": 91.0,
+                    "min": 88.0,
+                    "max": 95.0,
+                    "std": 1.013,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 91.009,
+                    "median": 91.0,
+                    "min": 89.0,
+                    "max": 94.0,
+                    "std": 1.137,
+                    "valid_count": 468,
+                    "missing_count": 13,
+                    "coverage_percent": 97.3
+                },
+                "RESP": {
+                    "mean": 21.439,
+                    "median": 21.0,
+                    "min": 20.0,
+                    "max": 26.0,
+                    "std": 1.296,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 96.917,
+                    "median": 97.0,
+                    "min": 96.0,
+                    "max": 98.0,
+                    "std": 0.358,
+                    "valid_count": 468,
+                    "missing_count": 13,
+                    "coverage_percent": 97.3
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_02",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 91.067,
+                    "median": 91.0,
+                    "min": 87.0,
+                    "max": 95.0,
+                    "std": 1.44,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 90.657,
+                    "median": 90.0,
+                    "min": 87.0,
+                    "max": 95.0,
+                    "std": 1.738,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 15.351,
+                    "median": 15.0,
+                    "min": 14.0,
+                    "max": 19.0,
+                    "std": 0.935,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.99,
+                    "median": 100.0,
+                    "min": 99.0,
+                    "max": 100.0,
+                    "std": 0.102,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_03",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 76.638,
+                    "median": 76.0,
+                    "min": 73.0,
+                    "max": 92.0,
+                    "std": 2.142,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 75.888,
+                    "median": 76.0,
+                    "min": 75.0,
+                    "max": 78.0,
+                    "std": 0.777,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.638,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 19.0,
+                    "std": 0.768,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 95.751,
+                    "median": 96.0,
+                    "min": 95.0,
+                    "max": 97.0,
+                    "std": 0.619,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_04",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 92.397,
+                    "median": 93.0,
+                    "min": 83.0,
+                    "max": 98.0,
+                    "std": 3.143,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 92.484,
+                    "median": 94.0,
+                    "min": 83.0,
+                    "max": 96.0,
+                    "std": 2.997,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 16.661,
+                    "median": 17.0,
+                    "min": 15.0,
+                    "max": 19.0,
+                    "std": 0.803,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 93.0,
+                    "median": 93.0,
+                    "min": 92.0,
+                    "max": 94.0,
+                    "std": 0.25,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_05",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 98.21,
+                    "median": 98.0,
+                    "min": 96.0,
+                    "max": 101.0,
+                    "std": 0.866,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 97.855,
+                    "median": 98.0,
+                    "min": 96.0,
+                    "max": 101.0,
+                    "std": 0.917,
+                    "valid_count": 475,
+                    "missing_count": 6,
+                    "coverage_percent": 98.75
+                },
+                "RESP": {
+                    "mean": 11.447,
+                    "median": 11.0,
+                    "min": 3.0,
+                    "max": 15.0,
+                    "std": 1.73,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.379,
+                    "median": 99.0,
+                    "min": 96.0,
+                    "max": 100.0,
+                    "std": 0.562,
+                    "valid_count": 475,
+                    "missing_count": 6,
+                    "coverage_percent": 98.75
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_06",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 81.842,
+                    "median": 82.0,
+                    "min": 81.0,
+                    "max": 91.0,
+                    "std": 1.243,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 81.258,
+                    "median": 81.0,
+                    "min": 80.0,
+                    "max": 83.0,
+                    "std": 0.544,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 19.902,
+                    "median": 20.0,
+                    "min": 18.0,
+                    "max": 21.0,
+                    "std": 0.453,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.0,
+                    "median": 99.0,
+                    "min": 99.0,
+                    "max": 99.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_07",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 90.098,
+                    "median": 90.0,
+                    "min": 89.0,
+                    "max": 91.0,
+                    "std": 0.337,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 89.79,
+                    "median": 90.0,
+                    "min": 89.0,
+                    "max": 91.0,
+                    "std": 0.442,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 19.906,
+                    "median": 20.0,
+                    "min": 18.0,
+                    "max": 21.0,
+                    "std": 0.444,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 94.998,
+                    "median": 95.0,
+                    "min": 94.0,
+                    "max": 95.0,
+                    "std": 0.046,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_08",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 99.948,
+                    "median": 100.0,
+                    "min": 98.0,
+                    "max": 103.0,
+                    "std": 0.673,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 99.765,
+                    "median": 100.0,
+                    "min": 98.0,
+                    "max": 102.0,
+                    "std": 0.717,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 21.102,
+                    "median": 21.0,
+                    "min": 20.0,
+                    "max": 23.0,
+                    "std": 0.747,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 93.0,
+                    "median": 93.0,
+                    "min": 93.0,
+                    "max": 93.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_09",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 76.74,
+                    "median": 77.0,
+                    "min": 75.0,
+                    "max": 81.0,
+                    "std": 0.731,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 76.561,
+                    "median": 77.0,
+                    "min": 75.0,
+                    "max": 79.0,
+                    "std": 0.687,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 20.0,
+                    "median": 20.0,
+                    "min": 20.0,
+                    "max": 20.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 93.0,
+                    "median": 93.0,
+                    "min": 93.0,
+                    "max": 93.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_10",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 82.146,
+                    "median": 82.0,
+                    "min": 79.0,
+                    "max": 92.0,
+                    "std": 1.865,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 81.511,
+                    "median": 81.0,
+                    "min": 79.0,
+                    "max": 86.0,
+                    "std": 1.441,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.414,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 22.0,
+                    "std": 1.244,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.95,
+                    "median": 98.0,
+                    "min": 97.0,
+                    "max": 100.0,
+                    "std": 0.734,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_11",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 92.975,
+                    "median": 92.0,
+                    "min": 88.0,
+                    "max": 103.0,
+                    "std": 2.531,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 92.753,
+                    "median": 92.0,
+                    "min": 89.0,
+                    "max": 102.0,
+                    "std": 2.451,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 15.395,
+                    "median": 15.0,
+                    "min": 13.0,
+                    "max": 25.0,
+                    "std": 2.186,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.01,
+                    "median": 97.0,
+                    "min": 96.0,
+                    "max": 100.0,
+                    "std": 1.322,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_12",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 93.023,
+                    "median": 92.0,
+                    "min": 89.0,
+                    "max": 99.0,
+                    "std": 2.655,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 92.69,
+                    "median": 92.0,
+                    "min": 88.0,
+                    "max": 99.0,
+                    "std": 2.656,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.979,
+                    "median": 19.0,
+                    "min": 17.0,
+                    "max": 21.0,
+                    "std": 1.241,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 95.96,
+                    "median": 96.0,
+                    "min": 92.0,
+                    "max": 99.0,
+                    "std": 0.626,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_13",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 66.819,
+                    "median": 67.0,
+                    "min": 66.0,
+                    "max": 68.0,
+                    "std": 0.411,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 66.064,
+                    "median": 66.0,
+                    "min": 64.0,
+                    "max": 67.0,
+                    "std": 0.356,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 10.63,
+                    "median": 9.0,
+                    "min": 1.0,
+                    "max": 19.0,
+                    "std": 4.264,
+                    "valid_count": 119,
+                    "missing_count": 362,
+                    "coverage_percent": 24.74
+                },
+                "SpO2": {
+                    "mean": 99.967,
+                    "median": 100.0,
+                    "min": 99.0,
+                    "max": 100.0,
+                    "std": 0.18,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "limited",
+                "notes": [
+                    "RESP has limited data coverage"
+                ]
+            }
+        },
+        {
+            "recording_id": "bidmc_14",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 95.148,
+                    "median": 95.0,
+                    "min": 93.0,
+                    "max": 97.0,
+                    "std": 0.778,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 94.931,
+                    "median": 95.0,
+                    "min": 92.0,
+                    "max": 97.0,
+                    "std": 0.743,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 19.457,
+                    "median": 19.0,
+                    "min": 12.0,
+                    "max": 34.0,
+                    "std": 3.946,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.651,
+                    "median": 99.0,
+                    "min": 98.0,
+                    "max": 100.0,
+                    "std": 0.667,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_15",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 107.362,
+                    "median": 107.0,
+                    "min": 105.0,
+                    "max": 110.0,
+                    "std": 1.079,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 107.266,
+                    "median": 107.0,
+                    "min": 105.0,
+                    "max": 109.0,
+                    "std": 1.129,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 14.489,
+                    "median": 15.0,
+                    "min": 7.0,
+                    "max": 18.0,
+                    "std": 2.107,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.179,
+                    "median": 98.0,
+                    "min": 98.0,
+                    "max": 99.0,
+                    "std": 0.384,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_16",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 109.524,
+                    "median": 110.0,
+                    "min": 102.0,
+                    "max": 113.0,
+                    "std": 1.349,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 109.538,
+                    "median": 110.0,
+                    "min": 108.0,
+                    "max": 111.0,
+                    "std": 0.8,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 19.453,
+                    "median": 19.0,
+                    "min": 18.0,
+                    "max": 21.0,
+                    "std": 0.841,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.568,
+                    "median": 99.0,
+                    "min": 96.0,
+                    "max": 100.0,
+                    "std": 0.913,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_17",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 81.052,
+                    "median": 80.0,
+                    "min": 74.0,
+                    "max": 94.0,
+                    "std": 3.959,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 77.052,
+                    "median": 77.0,
+                    "min": 68.0,
+                    "max": 87.0,
+                    "std": 3.303,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 16.969,
+                    "median": 17.0,
+                    "min": 15.0,
+                    "max": 19.0,
+                    "std": 1.309,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 93.287,
+                    "median": 93.0,
+                    "min": 92.0,
+                    "max": 96.0,
+                    "std": 0.807,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_18",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 90.094,
+                    "median": 90.0,
+                    "min": 89.0,
+                    "max": 91.0,
+                    "std": 0.444,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 89.644,
+                    "median": 90.0,
+                    "min": 88.0,
+                    "max": 91.0,
+                    "std": 0.567,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.888,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 18.0,
+                    "std": 0.461,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.94,
+                    "median": 98.0,
+                    "min": 97.0,
+                    "max": 99.0,
+                    "std": 0.3,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_19",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 73.474,
+                    "median": 73.0,
+                    "min": 71.0,
+                    "max": 78.0,
+                    "std": 1.201,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 72.807,
+                    "median": 73.0,
+                    "min": 70.0,
+                    "max": 78.0,
+                    "std": 0.974,
+                    "valid_count": 379,
+                    "missing_count": 102,
+                    "coverage_percent": 78.79
+                },
+                "RESP": {
+                    "mean": 12.778,
+                    "median": 13.0,
+                    "min": 7.0,
+                    "max": 18.0,
+                    "std": 2.285,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 100.0,
+                    "median": 100.0,
+                    "min": 100.0,
+                    "max": 100.0,
+                    "std": 0.0,
+                    "valid_count": 379,
+                    "missing_count": 102,
+                    "coverage_percent": 78.79
+                }
+            },
+            "data_quality": {
+                "status": "limited",
+                "notes": [
+                    "PULSE has limited data coverage",
+                    "SpO2 has limited data coverage"
+                ]
+            }
+        },
+        {
+            "recording_id": "bidmc_20",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 87.99,
+                    "median": 88.0,
+                    "min": 86.0,
+                    "max": 90.0,
+                    "std": 0.855,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 87.478,
+                    "median": 87.0,
+                    "min": 85.0,
+                    "max": 89.0,
+                    "std": 0.692,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 15.146,
+                    "median": 15.0,
+                    "min": 14.0,
+                    "max": 17.0,
+                    "std": 0.664,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.823,
+                    "median": 100.0,
+                    "min": 99.0,
+                    "max": 100.0,
+                    "std": 0.382,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_21",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 123.988,
+                    "median": 124.0,
+                    "min": 116.0,
+                    "max": 129.0,
+                    "std": 2.62,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 123.505,
+                    "median": 124.0,
+                    "min": 116.0,
+                    "max": 129.0,
+                    "std": 2.555,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.709,
+                    "median": 18.0,
+                    "min": 14.0,
+                    "max": 22.0,
+                    "std": 1.911,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 100.0,
+                    "median": 100.0,
+                    "min": 100.0,
+                    "max": 100.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_22",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 81.644,
+                    "median": 81.0,
+                    "min": 77.0,
+                    "max": 93.0,
+                    "std": 2.646,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 81.195,
+                    "median": 81.0,
+                    "min": 77.0,
+                    "max": 89.0,
+                    "std": 2.307,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.753,
+                    "median": 19.0,
+                    "min": 18.0,
+                    "max": 20.0,
+                    "std": 0.598,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 92.322,
+                    "median": 92.0,
+                    "min": 88.0,
+                    "max": 94.0,
+                    "std": 0.703,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_23",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 63.969,
+                    "median": 63.0,
+                    "min": 61.0,
+                    "max": 78.0,
+                    "std": 3.028,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 62.503,
+                    "median": 63.0,
+                    "min": 60.0,
+                    "max": 67.0,
+                    "std": 1.189,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.135,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 21.0,
+                    "std": 0.876,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.94,
+                    "median": 98.0,
+                    "min": 97.0,
+                    "max": 100.0,
+                    "std": 0.729,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_24",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 96.455,
+                    "median": 97.0,
+                    "min": 85.0,
+                    "max": 110.0,
+                    "std": 3.93,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 94.482,
+                    "median": 95.0,
+                    "min": 79.0,
+                    "max": 105.0,
+                    "std": 4.836,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 22.574,
+                    "median": 23.0,
+                    "min": 21.0,
+                    "max": 24.0,
+                    "std": 0.648,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.17,
+                    "median": 98.0,
+                    "min": 98.0,
+                    "max": 99.0,
+                    "std": 0.376,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_25",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 124.256,
+                    "median": 124.0,
+                    "min": 105.0,
+                    "max": 139.0,
+                    "std": 3.16,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 124.748,
+                    "median": 125.0,
+                    "min": 122.0,
+                    "max": 127.0,
+                    "std": 0.765,
+                    "valid_count": 480,
+                    "missing_count": 1,
+                    "coverage_percent": 99.79
+                },
+                "RESP": {
+                    "mean": 16.204,
+                    "median": 16.0,
+                    "min": 15.0,
+                    "max": 20.0,
+                    "std": 1.074,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.581,
+                    "median": 98.0,
+                    "min": 97.0,
+                    "max": 99.0,
+                    "std": 0.561,
+                    "valid_count": 480,
+                    "missing_count": 1,
+                    "coverage_percent": 99.79
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_26",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 90.137,
+                    "median": 90.0,
+                    "min": 84.0,
+                    "max": 98.0,
+                    "std": 2.463,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 88.387,
+                    "median": 88.0,
+                    "min": 84.0,
+                    "max": 95.0,
+                    "std": 1.325,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 16.516,
+                    "median": 17.0,
+                    "min": 13.0,
+                    "max": 20.0,
+                    "std": 1.763,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 95.401,
+                    "median": 95.0,
+                    "min": 94.0,
+                    "max": 99.0,
+                    "std": 0.978,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_27",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 88.247,
+                    "median": 88.0,
+                    "min": 85.0,
+                    "max": 101.0,
+                    "std": 1.473,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 87.946,
+                    "median": 88.0,
+                    "min": 85.0,
+                    "max": 90.0,
+                    "std": 0.812,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 10.472,
+                    "median": 11.0,
+                    "min": 6.0,
+                    "max": 20.0,
+                    "std": 1.541,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 96.002,
+                    "median": 96.0,
+                    "min": 96.0,
+                    "max": 97.0,
+                    "std": 0.046,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_28",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 82.983,
+                    "median": 82.0,
+                    "min": 74.0,
+                    "max": 108.0,
+                    "std": 4.801,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 80.64,
+                    "median": 80.0,
+                    "min": 69.0,
+                    "max": 102.0,
+                    "std": 5.1,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.16,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 21.0,
+                    "std": 1.106,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.913,
+                    "median": 100.0,
+                    "min": 98.0,
+                    "max": 100.0,
+                    "std": 0.297,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_29",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 90.541,
+                    "median": 90.0,
+                    "min": 87.0,
+                    "max": 95.0,
+                    "std": 1.046,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 90.152,
+                    "median": 90.0,
+                    "min": 88.0,
+                    "max": 93.0,
+                    "std": 0.972,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.532,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 24.0,
+                    "std": 1.497,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 92.825,
+                    "median": 93.0,
+                    "min": 92.0,
+                    "max": 95.0,
+                    "std": 0.608,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_30",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 88.428,
+                    "median": 88.0,
+                    "min": 84.0,
+                    "max": 93.0,
+                    "std": 1.163,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 88.106,
+                    "median": 88.0,
+                    "min": 84.0,
+                    "max": 92.0,
+                    "std": 0.959,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.703,
+                    "median": 19.0,
+                    "min": 17.0,
+                    "max": 22.0,
+                    "std": 1.107,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 95.701,
+                    "median": 96.0,
+                    "min": 94.0,
+                    "max": 98.0,
+                    "std": 0.757,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_31",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 83.58,
+                    "median": 83.0,
+                    "min": 81.0,
+                    "max": 89.0,
+                    "std": 1.553,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 83.104,
+                    "median": 83.0,
+                    "min": 80.0,
+                    "max": 88.0,
+                    "std": 1.696,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.098,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 21.0,
+                    "std": 0.979,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 100.0,
+                    "median": 100.0,
+                    "min": 100.0,
+                    "max": 100.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_32",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 81.064,
+                    "median": 81.0,
+                    "min": 80.0,
+                    "max": 83.0,
+                    "std": 0.313,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 80.326,
+                    "median": 80.0,
+                    "min": 79.0,
+                    "max": 81.0,
+                    "std": 0.54,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 24.665,
+                    "median": 25.0,
+                    "min": 23.0,
+                    "max": 26.0,
+                    "std": 0.647,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 84.674,
+                    "median": 85.0,
+                    "min": 83.0,
+                    "max": 87.0,
+                    "std": 0.761,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_33",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 82.37,
+                    "median": 83.0,
+                    "min": 73.0,
+                    "max": 89.0,
+                    "std": 3.141,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 82.927,
+                    "median": 84.0,
+                    "min": 67.0,
+                    "max": 89.0,
+                    "std": 3.602,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 20.085,
+                    "median": 20.0,
+                    "min": 12.0,
+                    "max": 31.0,
+                    "std": 4.192,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 93.615,
+                    "median": 94.0,
+                    "min": 92.0,
+                    "max": 95.0,
+                    "std": 0.793,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_34",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 81.802,
+                    "median": 81.0,
+                    "min": 77.0,
+                    "max": 103.0,
+                    "std": 3.044,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 81.121,
+                    "median": 81.0,
+                    "min": 76.0,
+                    "max": 89.0,
+                    "std": 2.144,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.763,
+                    "median": 17.0,
+                    "min": 16.0,
+                    "max": 25.0,
+                    "std": 1.55,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.996,
+                    "median": 100.0,
+                    "min": 99.0,
+                    "max": 100.0,
+                    "std": 0.064,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_35",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 101.938,
+                    "median": 101.0,
+                    "min": 94.0,
+                    "max": 112.0,
+                    "std": 3.702,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 101.514,
+                    "median": 101.0,
+                    "min": 94.0,
+                    "max": 111.0,
+                    "std": 3.534,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.085,
+                    "median": 17.0,
+                    "min": 14.0,
+                    "max": 19.0,
+                    "std": 1.04,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 96.667,
+                    "median": 97.0,
+                    "min": 96.0,
+                    "max": 99.0,
+                    "std": 0.61,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_36",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 72.952,
+                    "median": 73.0,
+                    "min": 69.0,
+                    "max": 76.0,
+                    "std": 1.462,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 72.559,
+                    "median": 73.0,
+                    "min": 67.0,
+                    "max": 76.0,
+                    "std": 1.457,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.482,
+                    "median": 18.0,
+                    "min": 17.0,
+                    "max": 20.0,
+                    "std": 0.713,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.106,
+                    "median": 98.0,
+                    "min": 98.0,
+                    "max": 99.0,
+                    "std": 0.308,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_37",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 90.094,
+                    "median": 90.0,
+                    "min": 89.0,
+                    "max": 92.0,
+                    "std": 0.702,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 89.41,
+                    "median": 89.0,
+                    "min": 88.0,
+                    "max": 92.0,
+                    "std": 0.857,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.692,
+                    "median": 19.0,
+                    "min": 16.0,
+                    "max": 21.0,
+                    "std": 1.245,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 99.522,
+                    "median": 100.0,
+                    "min": 98.0,
+                    "max": 100.0,
+                    "std": 0.52,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_38",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 83.825,
+                    "median": 84.0,
+                    "min": 78.0,
+                    "max": 93.0,
+                    "std": 3.357,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 82.879,
+                    "median": 83.0,
+                    "min": 78.0,
+                    "max": 91.0,
+                    "std": 3.352,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 16.069,
+                    "median": 16.0,
+                    "min": 9.0,
+                    "max": 24.0,
+                    "std": 2.152,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 94.769,
+                    "median": 95.0,
+                    "min": 93.0,
+                    "max": 98.0,
+                    "std": 1.064,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_39",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 75.516,
+                    "median": 75.0,
+                    "min": 71.0,
+                    "max": 83.0,
+                    "std": 2.096,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 70.214,
+                    "median": 74.0,
+                    "min": 37.0,
+                    "max": 79.0,
+                    "std": 10.741,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 14.297,
+                    "median": 14.0,
+                    "min": 12.0,
+                    "max": 16.0,
+                    "std": 0.988,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.195,
+                    "median": 97.0,
+                    "min": 96.0,
+                    "max": 98.0,
+                    "std": 0.469,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_40",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 110.437,
+                    "median": 110.0,
+                    "min": 109.0,
+                    "max": 112.0,
+                    "std": 0.857,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 109.952,
+                    "median": 110.0,
+                    "min": 108.0,
+                    "max": 115.0,
+                    "std": 0.977,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 16.732,
+                    "median": 16.0,
+                    "min": 13.0,
+                    "max": 24.0,
+                    "std": 1.879,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 96.881,
+                    "median": 97.0,
+                    "min": 95.0,
+                    "max": 100.0,
+                    "std": 0.819,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_41",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 79.191,
+                    "median": 80.0,
+                    "min": 50.0,
+                    "max": 99.0,
+                    "std": 8.586,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 72.688,
+                    "median": 79.0,
+                    "min": 49.0,
+                    "max": 97.0,
+                    "std": 13.312,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 13.834,
+                    "median": 14.0,
+                    "min": 12.0,
+                    "max": 16.0,
+                    "std": 0.807,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 100.0,
+                    "median": 100.0,
+                    "min": 100.0,
+                    "max": 100.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_42",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 83.719,
+                    "median": 84.0,
+                    "min": 82.0,
+                    "max": 85.0,
+                    "std": 0.568,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 83.41,
+                    "median": 84.0,
+                    "min": 82.0,
+                    "max": 84.0,
+                    "std": 0.711,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.289,
+                    "median": 17.0,
+                    "min": 16.0,
+                    "max": 18.0,
+                    "std": 0.476,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 95.01,
+                    "median": 95.0,
+                    "min": 95.0,
+                    "max": 96.0,
+                    "std": 0.102,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_43",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 89.923,
+                    "median": 90.0,
+                    "min": 79.0,
+                    "max": 99.0,
+                    "std": 3.736,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 89.358,
+                    "median": 89.0,
+                    "min": 77.0,
+                    "max": 99.0,
+                    "std": 3.787,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.462,
+                    "median": 17.0,
+                    "min": 16.0,
+                    "max": 20.0,
+                    "std": 0.912,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 96.798,
+                    "median": 97.0,
+                    "min": 96.0,
+                    "max": 97.0,
+                    "std": 0.402,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_44",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 89.825,
+                    "median": 90.0,
+                    "min": 87.0,
+                    "max": 92.0,
+                    "std": 1.586,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 89.493,
+                    "median": 89.0,
+                    "min": 86.0,
+                    "max": 92.0,
+                    "std": 1.433,
+                    "valid_count": 475,
+                    "missing_count": 6,
+                    "coverage_percent": 98.75
+                },
+                "RESP": {
+                    "mean": 16.667,
+                    "median": 17.0,
+                    "min": 16.0,
+                    "max": 18.0,
+                    "std": 0.534,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.295,
+                    "median": 97.0,
+                    "min": 96.0,
+                    "max": 100.0,
+                    "std": 0.664,
+                    "valid_count": 475,
+                    "missing_count": 6,
+                    "coverage_percent": 98.75
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_45",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 61.258,
+                    "median": 61.0,
+                    "min": 44.0,
+                    "max": 72.0,
+                    "std": 4.81,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 62.536,
+                    "median": 62.0,
+                    "min": 51.0,
+                    "max": 83.0,
+                    "std": 5.843,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 16.04,
+                    "median": 16.0,
+                    "min": 15.0,
+                    "max": 17.0,
+                    "std": 0.567,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 100.0,
+                    "median": 100.0,
+                    "min": 100.0,
+                    "max": 100.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_46",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 106.705,
+                    "median": 107.0,
+                    "min": 103.0,
+                    "max": 112.0,
+                    "std": 1.391,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 106.622,
+                    "median": 107.0,
+                    "min": 103.0,
+                    "max": 110.0,
+                    "std": 1.515,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.524,
+                    "median": 17.0,
+                    "min": 13.0,
+                    "max": 29.0,
+                    "std": 3.537,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 95.613,
+                    "median": 96.0,
+                    "min": 91.0,
+                    "max": 98.0,
+                    "std": 1.262,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_47",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 83.661,
+                    "median": 83.0,
+                    "min": 82.0,
+                    "max": 90.0,
+                    "std": 1.101,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 83.227,
+                    "median": 83.0,
+                    "min": 81.0,
+                    "max": 88.0,
+                    "std": 1.374,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 22.112,
+                    "median": 22.0,
+                    "min": 21.0,
+                    "max": 24.0,
+                    "std": 0.413,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 97.732,
+                    "median": 98.0,
+                    "min": 96.0,
+                    "max": 100.0,
+                    "std": 0.643,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_48",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 101.418,
+                    "median": 101.0,
+                    "min": 96.0,
+                    "max": 124.0,
+                    "std": 4.381,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 100.767,
+                    "median": 101.0,
+                    "min": 94.0,
+                    "max": 118.0,
+                    "std": 3.439,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.353,
+                    "median": 18.0,
+                    "min": 16.0,
+                    "max": 24.0,
+                    "std": 1.541,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.48,
+                    "median": 98.0,
+                    "min": 96.0,
+                    "max": 100.0,
+                    "std": 0.753,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_49",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 84.509,
+                    "median": 85.0,
+                    "min": 82.0,
+                    "max": 87.0,
+                    "std": 1.129,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 84.281,
+                    "median": 84.0,
+                    "min": 82.0,
+                    "max": 87.0,
+                    "std": 1.358,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 17.295,
+                    "median": 17.0,
+                    "min": 15.0,
+                    "max": 21.0,
+                    "std": 1.296,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 85.888,
+                    "median": 86.0,
+                    "min": 84.0,
+                    "max": 88.0,
+                    "std": 1.027,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_50",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 76.316,
+                    "median": 76.0,
+                    "min": 75.0,
+                    "max": 79.0,
+                    "std": 0.955,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 76.029,
+                    "median": 76.0,
+                    "min": 74.0,
+                    "max": 80.0,
+                    "std": 1.261,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 14.938,
+                    "median": 15.0,
+                    "min": 13.0,
+                    "max": 16.0,
+                    "std": 0.796,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.516,
+                    "median": 98.0,
+                    "min": 98.0,
+                    "max": 100.0,
+                    "std": 0.592,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_51",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 90.037,
+                    "median": 90.0,
+                    "min": 87.0,
+                    "max": 93.0,
+                    "std": 1.527,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 89.748,
+                    "median": 90.0,
+                    "min": 87.0,
+                    "max": 93.0,
+                    "std": 1.455,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.341,
+                    "median": 18.0,
+                    "min": 17.0,
+                    "max": 20.0,
+                    "std": 0.616,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 98.308,
+                    "median": 98.0,
+                    "min": 98.0,
+                    "max": 99.0,
+                    "std": 0.462,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_52",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 115.1,
+                    "median": 115.0,
+                    "min": 113.0,
+                    "max": 117.0,
+                    "std": 0.946,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 115.168,
+                    "median": 116.0,
+                    "min": 113.0,
+                    "max": 117.0,
+                    "std": 1.101,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 18.426,
+                    "median": 18.0,
+                    "min": 18.0,
+                    "max": 20.0,
+                    "std": 0.577,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 92.753,
+                    "median": 93.0,
+                    "min": 91.0,
+                    "max": 96.0,
+                    "std": 0.826,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        },
+        {
+            "recording_id": "bidmc_53",
+            "source": "BIDMC PPG and Respiration Dataset",
+            "duration_seconds": 480,
+            "signals": {
+                "HR": {
+                    "mean": 92.817,
+                    "median": 93.0,
+                    "min": 81.0,
+                    "max": 106.0,
+                    "std": 5.011,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "PULSE": {
+                    "mean": 91.805,
+                    "median": 92.0,
+                    "min": 77.0,
+                    "max": 108.0,
+                    "std": 5.261,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "RESP": {
+                    "mean": 19.929,
+                    "median": 19.0,
+                    "min": 17.0,
+                    "max": 30.0,
+                    "std": 2.406,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                },
+                "SpO2": {
+                    "mean": 100.0,
+                    "median": 100.0,
+                    "min": 100.0,
+                    "max": 100.0,
+                    "std": 0.0,
+                    "valid_count": 481,
+                    "missing_count": 0,
+                    "coverage_percent": 100.0
+                }
+            },
+            "data_quality": {
+                "status": "sufficient_for_demo",
+                "notes": []
+            }
+        }
+    ]
+}

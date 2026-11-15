@@ -103,7 +103,8 @@ class DemoOrbitCareApiClient extends OrbitCareApiClient {
   @override
   Future<List<HealthMeasurement>> getMeasurements({
     required String token,
-    int limit = 30,
+    int page = 1,
+    int limit = 25,
   }) {
     return _repository.getMeasurements(limit: limit);
   }

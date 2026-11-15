@@ -17,6 +17,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
   bool _isLoading = false;
+  bool _showConfigAction = false;
   String? _errorMessage;
 
   @override
@@ -25,11 +26,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  Future<void> _openServerConfig() async {
+    final saved = await Navigator.pushNamed(context, AppRoutes.serverConfig);
+    if (saved == true && mounted) {
+      setState(() {
+        _errorMessage = null;
+        _showConfigAction = false;
+      });
+    }
+  }
+
   Future<void> _handleSendCode() async {
     final email = emailController.text.trim();
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
       setState(() {
         _errorMessage = 'Please enter a valid email address.';
+        _showConfigAction = false;
       });
       return;
     }
@@ -42,13 +54,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
+    await sessionController.ensureConfigLoaded();
+    if (!mounted) return;
+
+    if (!sessionController.isProductionApiConfigured) {
+      setState(() {
+        _errorMessage =
+            'Backend server URL is not configured yet. Configure your server URL before requesting a reset code.';
+        _showConfigAction = true;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _showConfigAction = false;
     });
 
     try {
-      await sessionController.apiClient.sendOtp(
+      await sessionController.productionApiClient.sendOtp(
         email: email,
         purpose: 'reset_password',
       );
@@ -142,7 +167,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 26),
               if (_errorMessage != null) ...[
-                AuthStatusBanner(isError: true, message: _errorMessage!),
+                AuthStatusBanner(
+                  isError: true,
+                  message: _errorMessage!,
+                  action: _showConfigAction
+                      ? TextButton.icon(
+                          onPressed: _isLoading ? null : _openServerConfig,
+                          icon: const Icon(Icons.settings, size: 18),
+                          label: const Text('Configure Server URL'),
+                        )
+                      : null,
+                ),
                 const SizedBox(height: 16),
               ],
               Container(

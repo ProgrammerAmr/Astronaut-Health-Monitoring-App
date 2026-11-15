@@ -36,6 +36,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   bool _initialized = false;
+  int _lastDemoDataRevision = 0;
 
   // Dashboard state
   bool _loadingDashboard = false;
@@ -77,8 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final controller = _sessionController;
+    final currentRevision = controller?.demoDataRevision ?? 0;
+
     if (!_initialized) {
       _initialized = true;
+      _lastDemoDataRevision = currentRevision;
       final shouldFetch = widget.autoFetchHealthData ??
           (_authToken != null &&
               _authToken!.isNotEmpty &&
@@ -89,6 +94,11 @@ class _HomeScreenState extends State<HomeScreen> {
           _loadAllHealthData();
         });
       }
+    } else if (currentRevision != _lastDemoDataRevision) {
+      _lastDemoDataRevision = currentRevision;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadAllHealthData();
+      });
     }
   }
 
@@ -325,6 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openAddMeasurement() async {
+    final isDemo = _sessionController?.isDemoMode ?? false;
     final created = await Navigator.push<bool>(
       context,
       MaterialPageRoute<bool>(
@@ -336,24 +347,172 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (created == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Measurement saved successfully.')),
+        SnackBar(
+          content: Text(
+            isDemo
+                ? 'Saved locally in Demo Mode (not sent to a server).'
+                : 'Measurement saved successfully.',
+          ),
+        ),
       );
       await Future.wait<void>([
         _loadDashboard(),
         _loadMeasurements(),
+        _loadAlerts(),
         _loadReport(),
       ]);
     }
+  }
+
+  Future<void> _openProfileSettings() async {
+    await Navigator.pushNamed(context, AppRoutes.profileSettings);
+    if (!mounted) return;
+    setState(() {});
   }
 
   Future<void> _openConnectionSettings() async {
     final urlBefore = BackendConfig.instance.effectiveBaseUrl;
     await Navigator.pushNamed(context, AppRoutes.connectionSettings);
     if (!mounted) return;
-    // Reload everything when the developer pointed the app at another backend.
     if (BackendConfig.instance.effectiveBaseUrl != urlBefore) {
       await _loadAllHealthData();
     }
+  }
+
+  void _showAlertDetails(HealthAlert alert) {
+    final isDemo = _sessionController?.isDemoMode ?? false;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Alert Details',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.navy,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close, color: AppColors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _SmallTag(
+                      label: alert.severity.toUpperCase(),
+                      bgColor: _alertSeverityBg(alert.severity),
+                      fgColor: _alertSeverityFg(alert.severity),
+                    ),
+                    _SmallTag(
+                      label: alert.isRead ? 'READ' : 'UNREAD',
+                      bgColor: alert.isRead
+                          ? const Color(0xFFF2F4F8)
+                          : const Color(0xFFDCEBFF),
+                      fgColor: alert.isRead ? AppColors.grey : AppColors.navy,
+                    ),
+                    if (isDemo)
+                      const _SmallTag(
+                        label: 'DEMO DATA',
+                        bgColor: Color(0xFFFFF3CD),
+                        fgColor: Color(0xFF8A5300),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  alert.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.navy,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Recorded: ${formatOrbitTimestamp(alert.createdAt)}',
+                  style: const TextStyle(fontSize: 12, color: AppColors.grey),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  alert.message,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.darkText,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Text(
+                    isDemo
+                        ? 'Offline Demo Mode: This alert is synthetic sample data for demonstration only — not a medical diagnosis or real telemetry alert.'
+                        : 'Operational prototype notice: Not a clinical or flight-certified diagnostic alert.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.grey,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      child: const Text('Close'),
+                    ),
+                    if (!alert.isRead) ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        key: Key('sheet_mark_read_${alert.id}'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(sheetContext);
+                          await _markAlertRead(alert);
+                        },
+                        icon: const Icon(Icons.done_all, size: 16),
+                        label: const Text('Mark as Read'),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _handleLogout() async {
@@ -368,6 +527,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = _sessionController?.user;
+    final isDemoMode = _sessionController?.isDemoMode ?? false;
+    final useFahrenheit =
+        _sessionController?.demoPreferences.useFahrenheit ?? false;
     final unreadCount = _dashboard?.unreadAlerts ??
         _alerts.where((alert) => !alert.isRead).length;
 
@@ -377,20 +539,37 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppColors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'OrbitCare',
-          style: TextStyle(
-            color: AppColors.navy,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Flexible(
+              child: Text(
+                'OrbitCare',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppColors.navy,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            if (isDemoMode) ...[
+              const SizedBox(width: 8),
+              const _SmallTag(
+                label: 'DEMO MODE',
+                bgColor: Color(0xFFFFF3CD),
+                fgColor: Color(0xFF8A5300),
+              ),
+            ],
+          ],
         ),
         actions: [
-          IconButton(
-            key: const Key('connection_settings_button'),
-            tooltip: 'Backend Connection',
-            onPressed: _openConnectionSettings,
-            icon: const Icon(Icons.settings_ethernet, color: AppColors.navy),
-          ),
+          if (!isDemoMode)
+            IconButton(
+              key: const Key('connection_settings_button'),
+              tooltip: 'Backend Connection',
+              onPressed: _openConnectionSettings,
+              icon: const Icon(Icons.settings_ethernet, color: AppColors.navy),
+            ),
           if (_authToken != null && _authToken!.isNotEmpty)
             IconButton(
               tooltip: 'Refresh Data',
@@ -399,21 +578,69 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           if (_sessionController != null)
             IconButton(
+              key: const Key('profile_settings_btn'),
+              tooltip: 'Profile & Settings',
+              onPressed: _openProfileSettings,
+              icon: const Icon(Icons.person_outline, color: AppColors.navy),
+            ),
+          if (_sessionController != null)
+            IconButton(
               key: const Key('logout_button'),
-              tooltip: 'Sign Out',
+              tooltip: isDemoMode ? 'Exit Demo Mode' : 'Sign Out',
               onPressed: _handleLogout,
               icon: const Icon(Icons.logout, color: AppColors.navy),
             ),
         ],
       ),
       body: SafeArea(
-        child: IndexedStack(
-          index: _selectedIndex,
+        child: Column(
           children: [
-            _buildOverviewTab(user),
-            _buildVitalsTab(),
-            _buildAlertsTab(),
-            _buildReportsTab(),
+            if (isDemoMode)
+              Container(
+                key: const Key('demo_mode_banner'),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF8E6),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFF0C36D)),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.science_outlined,
+                      size: 16,
+                      color: Color(0xFF8A5300),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'DEMO MODE • Offline synthetic astronaut data (not real sensors or live server)',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF663C00),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  _buildOverviewTab(user, isDemoMode, useFahrenheit),
+                  _buildVitalsTab(useFahrenheit),
+                  _buildAlertsTab(),
+                  _buildReportsTab(useFahrenheit),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -474,7 +701,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ==================== TAB 1: OVERVIEW + CSM ====================
 
-  Widget _buildOverviewTab(AuthUser? user) {
+  Widget _buildOverviewTab(
+    AuthUser? user,
+    bool isDemoMode,
+    bool useFahrenheit,
+  ) {
     final isAuthenticated = _authToken != null && _authToken!.isNotEmpty;
 
     return RefreshIndicator(
@@ -535,13 +766,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
             if (isAuthenticated) ...[
               const SizedBox(height: 18),
-              _buildDashboardSummarySection(),
+              _buildDashboardSummarySection(useFahrenheit),
             ],
 
             const SizedBox(height: 18),
 
             // DEC-001 Cognitive State Monitoring Research Card (authenticated)
             CognitiveStateResearchCard(
+              key: ValueKey<String>(isDemoMode ? 'csm_demo' : 'csm_prod'),
               apiClient: _csmClient,
               authToken: _authToken,
               initialSnapshot: widget.initialCsmSnapshot,
@@ -554,7 +786,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDashboardSummarySection() {
+  Widget _buildDashboardSummarySection(bool useFahrenheit) {
     if (_loadingDashboard && _dashboard == null) {
       return const _SectionLoadingCard(label: 'Loading crew health overview...');
     }
@@ -568,6 +800,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final summary = _dashboard;
     final latest = summary?.latestMeasurement;
+    final isDemoRecord = latest?.source == 'imported' ||
+        latest?.source == 'demo_synthetic' ||
+        latest?.source == 'demo_local';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -620,11 +855,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppColors.navy,
                     ),
                   ),
-                  if (latest?.source == 'imported')
-                    const _SmallTag(
-                      label: 'Demo / Imported',
-                      bgColor: Color(0xFFFFF3CD),
-                      fgColor: Color(0xFF8A5300),
+                  if (isDemoRecord)
+                    _SmallTag(
+                      label: latest?.source == 'demo_local'
+                          ? 'Demo (Local Entry)'
+                          : 'Demo / Synthetic',
+                      bgColor: const Color(0xFFFFF3CD),
+                      fgColor: const Color(0xFF8A5300),
                     ),
                 ],
               ),
@@ -662,7 +899,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (latest.temperature != null)
                       _VitalPill(
                         label: 'Temp',
-                        value: '${latest.temperature!.toStringAsFixed(1)} °C',
+                        value: formatOrbitTemperature(
+                          latest.temperature,
+                          useFahrenheit: useFahrenheit,
+                        ),
                       ),
                     if (latest.bloodPressure?.hasValues == true)
                       _VitalPill(
@@ -686,7 +926,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ==================== TAB 2: VITALS HISTORY ====================
 
-  Widget _buildVitalsTab() {
+  Widget _buildVitalsTab(bool useFahrenheit) {
     if (_loadingMeasurements && _measurements.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20),
@@ -703,6 +943,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+
+    final showTrend = _measurements.length >= 2;
 
     return RefreshIndicator(
       onRefresh: _loadMeasurements,
@@ -722,10 +964,20 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           : ListView.separated(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 90),
-              itemCount: _measurements.length,
+              itemCount: _measurements.length + (showTrend ? 1 : 0),
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                return _MeasurementCard(measurement: _measurements[index]);
+                if (showTrend && index == 0) {
+                  return _VitalsTrendCard(
+                    title: 'Recent Heart Rate & SpO2 Trend',
+                    measurements: _measurements.take(8).toList(),
+                  );
+                }
+                final mIndex = showTrend ? index - 1 : index;
+                return _MeasurementCard(
+                  measurement: _measurements[mIndex],
+                  useFahrenheit: useFahrenheit,
+                );
               },
             ),
     );
@@ -807,6 +1059,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 return _AlertCard(
                                   alert: alert,
                                   isBusy: isBusy,
+                                  onTap: () => _showAlertDetails(alert),
                                   onMarkRead: () => _markAlertRead(alert),
                                 );
                               },
@@ -819,7 +1072,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ==================== TAB 4: REPORTS ====================
 
-  Widget _buildReportsTab() {
+  Widget _buildReportsTab(bool useFahrenheit) {
+    final windowMeasurements = _measurements.where((m) {
+      final ts = m.measuredAt;
+      final start = _report?.startDate;
+      if (ts == null || start == null) return true;
+      return !ts.isBefore(start);
+    }).toList();
+
     return RefreshIndicator(
       onRefresh: () => _loadReport(),
       child: SingleChildScrollView(
@@ -868,8 +1128,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 description:
                     'No health measurements fall within this report window yet. Log measurements or choose a wider period.',
               )
-            else
-              _ReportSummaryCard(report: _report!),
+            else ...[
+              _ReportSummaryCard(
+                report: _report!,
+                useFahrenheit: useFahrenheit,
+              ),
+              if (windowMeasurements.length >= 2) ...[
+                const SizedBox(height: 14),
+                _VitalsTrendCard(
+                  title:
+                      '${_reportPeriod[0].toUpperCase()}${_reportPeriod.substring(1)} Vitals Trend (${windowMeasurements.length} records)',
+                  measurements: windowMeasurements.take(10).toList(),
+                ),
+              ],
+            ],
           ],
         ),
       ),
@@ -978,13 +1250,215 @@ class _VitalPill extends StatelessWidget {
   }
 }
 
-class _MeasurementCard extends StatelessWidget {
-  final HealthMeasurement measurement;
+Color _alertSeverityBg(String severity) {
+  switch (severity.toLowerCase()) {
+    case 'critical':
+    case 'high':
+      return const Color(0xFFFEF3F2);
+    case 'medium':
+      return const Color(0xFFFFF8E6);
+    default:
+      return AppColors.lightBackground;
+  }
+}
 
-  const _MeasurementCard({required this.measurement});
+Color _alertSeverityFg(String severity) {
+  switch (severity.toLowerCase()) {
+    case 'critical':
+    case 'high':
+      return const Color(0xFFB42318);
+    case 'medium':
+      return const Color(0xFF8A5300);
+    default:
+      return AppColors.primary;
+  }
+}
+
+class _VitalsTrendCard extends StatelessWidget {
+  final String title;
+  final List<HealthMeasurement> measurements;
+
+  const _VitalsTrendCard({
+    required this.title,
+    required this.measurements,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Display chronologically left -> right
+    final ordered = measurements.reversed.toList();
+    final hrValues = ordered.map((m) => m.heartRate).whereType<double>().toList();
+    final maxHr = hrValues.isEmpty
+        ? 120.0
+        : hrValues.reduce((a, b) => a > b ? a : b).clamp(100.0, 200.0);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.bold,
+              color: AppColors.navy,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Row(
+            children: [
+              _LegendDot(color: AppColors.primary, label: 'Heart Rate (bpm)'),
+              SizedBox(width: 14),
+              _LegendDot(color: AppColors.teal, label: 'SpO2 (%)'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 124,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: ordered.map((m) {
+                final hr = m.heartRate;
+                final spo2 = m.spo2;
+                final hrFraction = hr != null ? (hr / maxHr).clamp(0.15, 1.0) : 0.1;
+                final spo2Fraction = spo2 != null
+                    ? ((spo2 - 85).clamp(0, 15) / 15).clamp(0.15, 1.0)
+                    : 0.1;
+                final ts = m.measuredAt?.toLocal();
+                final dayLabel = ts != null
+                    ? '${ts.month}/${ts.day}'
+                    : '--';
+
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          hr != null ? '${hr.round()}' : '--',
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.clip,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        SizedBox(
+                          height: 68,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 68 * hrFraction,
+                                decoration: BoxDecoration(
+                                  color: (hr != null && hr > 105)
+                                      ? const Color(0xFFB42318)
+                                      : AppColors.primary,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Container(
+                                width: 6,
+                                height: 68 * spo2Fraction,
+                                decoration: BoxDecoration(
+                                  color: AppColors.teal,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          dayLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            color: AppColors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11.5, color: AppColors.grey),
+        ),
+      ],
+    );
+  }
+}
+
+class _MeasurementCard extends StatelessWidget {
+  final HealthMeasurement measurement;
+  final bool useFahrenheit;
+
+  const _MeasurementCard({
+    required this.measurement,
+    this.useFahrenheit = false,
+  });
+
+  String _sourceBadgeLabel(String source) {
+    switch (source) {
+      case 'demo_synthetic':
+        return 'SYNTHETIC DEMO';
+      case 'demo_local':
+        return 'LOCAL DEMO';
+      case 'imported':
+        return 'IMPORTED / DEMO';
+      default:
+        return source.toUpperCase();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDemoSource = measurement.source == 'imported' ||
+        measurement.source == 'demo_synthetic' ||
+        measurement.source == 'demo_local';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1009,13 +1483,11 @@ class _MeasurementCard extends StatelessWidget {
                 ),
               ),
               _SmallTag(
-                label: measurement.source == 'imported'
-                    ? 'IMPORTED / DEMO'
-                    : measurement.source.toUpperCase(),
-                bgColor: measurement.source == 'imported'
+                label: _sourceBadgeLabel(measurement.source),
+                bgColor: isDemoSource
                     ? const Color(0xFFFFF3CD)
                     : AppColors.lightBackground,
-                fgColor: measurement.source == 'imported'
+                fgColor: isDemoSource
                     ? const Color(0xFF8A5300)
                     : AppColors.primary,
               ),
@@ -1044,7 +1516,10 @@ class _MeasurementCard extends StatelessWidget {
               if (measurement.temperature != null)
                 _VitalPill(
                   label: 'Temp',
-                  value: '${measurement.temperature!.toStringAsFixed(1)} °C',
+                  value: formatOrbitTemperature(
+                    measurement.temperature,
+                    useFahrenheit: useFahrenheit,
+                  ),
                 ),
               if (measurement.bloodPressure?.hasValues == true)
                 _VitalPill(
@@ -1078,112 +1553,106 @@ class _MeasurementCard extends StatelessWidget {
 class _AlertCard extends StatelessWidget {
   final HealthAlert alert;
   final bool isBusy;
+  final VoidCallback onTap;
   final VoidCallback onMarkRead;
 
   const _AlertCard({
     required this.alert,
     required this.isBusy,
+    required this.onTap,
     required this.onMarkRead,
   });
 
-  Color _severityBg(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
-      case 'high':
-        return const Color(0xFFFEF3F2);
-      case 'medium':
-        return const Color(0xFFFFF8E6);
-      default:
-        return AppColors.lightBackground;
-    }
-  }
-
-  Color _severityFg(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
-      case 'high':
-        return const Color(0xFFB42318);
-      case 'medium':
-        return const Color(0xFF8A5300);
-      default:
-        return AppColors.primary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: alert.isRead ? AppColors.white : const Color(0xFFF6FAFF),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: alert.isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.35),
+    return InkWell(
+      key: Key('alert_card_${alert.id}'),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: alert.isRead ? AppColors.white : const Color(0xFFF6FAFF),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: alert.isRead
+                ? AppColors.border
+                : AppColors.primary.withValues(alpha: 0.35),
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              _SmallTag(
-                label: alert.severity.toUpperCase(),
-                bgColor: _severityBg(alert.severity),
-                fgColor: _severityFg(alert.severity),
-              ),
-              _SmallTag(
-                label: alert.isRead ? 'READ' : 'UNREAD',
-                bgColor: alert.isRead
-                    ? const Color(0xFFF2F4F8)
-                    : const Color(0xFFDCEBFF),
-                fgColor: alert.isRead ? AppColors.grey : AppColors.navy,
-              ),
-              Text(
-                formatOrbitTimestamp(alert.createdAt),
-                style: const TextStyle(fontSize: 11, color: AppColors.grey),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            alert.title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.navy,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _SmallTag(
+                  label: alert.severity.toUpperCase(),
+                  bgColor: _alertSeverityBg(alert.severity),
+                  fgColor: _alertSeverityFg(alert.severity),
+                ),
+                _SmallTag(
+                  label: alert.isRead ? 'READ' : 'UNREAD',
+                  bgColor: alert.isRead
+                      ? const Color(0xFFF2F4F8)
+                      : const Color(0xFFDCEBFF),
+                  fgColor: alert.isRead ? AppColors.grey : AppColors.navy,
+                ),
+                Text(
+                  formatOrbitTimestamp(alert.createdAt),
+                  style: const TextStyle(fontSize: 11, color: AppColors.grey),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            alert.message,
-            style: const TextStyle(
-              fontSize: 13.5,
-              color: AppColors.darkText,
-              height: 1.4,
-            ),
-          ),
-          if (!alert.isRead) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                key: Key('mark_read_${alert.id}'),
-                onPressed: isBusy ? null : onMarkRead,
-                icon: isBusy
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.done_all, size: 16),
-                label: const Text('Mark as Read'),
+            const SizedBox(height: 10),
+            Text(
+              alert.title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.navy,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              alert.message,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: AppColors.darkText,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Tap for details',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (!alert.isRead)
+                  OutlinedButton.icon(
+                    key: Key('mark_read_${alert.id}'),
+                    onPressed: isBusy ? null : onMarkRead,
+                    icon: isBusy
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.done_all, size: 16),
+                    label: const Text('Mark as Read'),
+                  ),
+              ],
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1191,8 +1660,12 @@ class _AlertCard extends StatelessWidget {
 
 class _ReportSummaryCard extends StatelessWidget {
   final HealthReport report;
+  final bool useFahrenheit;
 
-  const _ReportSummaryCard({required this.report});
+  const _ReportSummaryCard({
+    required this.report,
+    this.useFahrenheit = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1249,9 +1722,10 @@ class _ReportSummaryCard extends StatelessWidget {
               ),
               _VitalPill(
                 label: 'Avg Temp',
-                value: report.averageTemperature != null
-                    ? '${report.averageTemperature!.toStringAsFixed(1)} °C'
-                    : '--',
+                value: formatOrbitTemperature(
+                  report.averageTemperature,
+                  useFahrenheit: useFahrenheit,
+                ),
               ),
               _VitalPill(
                 label: 'Total Steps',

@@ -1,0 +1,415 @@
+name: Build Signed Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "Optional OrbitCare production backend base URL baked into APK (also configurable in-app)"
+        required: false
+        default: ""
+      release_tag:
+        description: "Optional GitHub Release tag override (defaults to v<pubspec-version>-demo-apk)"
+        required: false
+        default: ""
+  push:
+    branches: [main, "arena/**"]
+    paths:
+      - "Flutter/**"
+      - ".github/workflows/build-android-apk.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-signed-apk:
+    name: Build & Sign OrbitCare Demo Android APK
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.meta.outputs.version_name }}
+      version_code: ${{ steps.meta.outputs.version_code }}
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      apk_filename: ${{ steps.meta.outputs.apk_filename }}
+      signing_mode: ${{ steps.signing.outputs.signing_mode }}
+      default_api_configured: ${{ steps.build.outputs.default_api_configured }}
+      sha256: ${{ steps.verify.outputs.sha256 }}
+      apk_bytes: ${{ steps.verify.outputs.apk_bytes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse version metadata from Flutter/pubspec.yaml
+        id: meta
+        run: |
+          set -euo pipefail
+          RAW_VERSION=$(grep -E '^version:' Flutter/pubspec.yaml | head -n 1 | awk '{print $2}' | tr -d '\r')
+          VERSION_NAME="${RAW_VERSION%%+*}"
+          VERSION_CODE="${RAW_VERSION##*+}"
+          if [ -z "$VERSION_NAME" ] || [ -z "$VERSION_CODE" ] || [ "$VERSION_NAME" = "$RAW_VERSION" ]; then
+            echo "::error::Invalid version field in Flutter/pubspec.yaml: $RAW_VERSION"
+            exit 1
+          fi
+          INPUT_TAG="${{ github.event.inputs.release_tag || '' }}"
+          RELEASE_TAG="${INPUT_TAG:-v${VERSION_NAME}-demo-apk}"
+          APK_FILENAME="OrbitCare-Demo-v${VERSION_NAME}.apk"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "apk_filename=$APK_FILENAME" >> "$GITHUB_OUTPUT"
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "APK_FILENAME=$APK_FILENAME" >> "$GITHUB_ENV"
+          echo "Building OrbitCare Demo v${VERSION_NAME} (versionCode ${VERSION_CODE}) -> tag ${RELEASE_TAG}"
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Prepare Android release signing keystore
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS_SECRET: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS_SECRET: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASS_SECRET: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYSTORE_PATH="/tmp/orbitcare-release.jks"
+          if [ -n "${KEYSTORE_B64:-}" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$KEYSTORE_PATH"
+            KEY_ALIAS="${KEY_ALIAS_SECRET:-orbitcare}"
+            KEY_PASS="$KEY_PASS_SECRET"
+            STORE_PASS="$STORE_PASS_SECRET"
+            SIGNING_MODE="persistent-secret"
+          else
+            KEY_ALIAS="orbitcare-release"
+            STORE_PASS=$(openssl rand -hex 16)
+            KEY_PASS="$STORE_PASS"
+            keytool -genkeypair -v \
+              -keystore "$KEYSTORE_PATH" \
+              -storetype PKCS12 \
+              -alias "$KEY_ALIAS" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass "$STORE_PASS" \
+              -keypass "$KEY_PASS" \
+              -dname "CN=OrbitCare Prototype, OU=Hackathon, O=OrbitCare, L=Orbit, S=Space, C=EG"
+            SIGNING_MODE="ci-generated-release-key"
+          fi
+
+          echo "signing_mode=$SIGNING_MODE" >> "$GITHUB_OUTPUT"
+          echo "SIGNING_MODE=$SIGNING_MODE" >> "$GITHUB_ENV"
+
+          cat > Flutter/android/key.properties <<EOF
+          storePassword=$STORE_PASS
+          keyPassword=$KEY_PASS
+          keyAlias=$KEY_ALIAS
+          storeFile=$KEYSTORE_PATH
+          EOF
+
+      - name: Fetch Flutter dependencies, analyze & run tests
+        working-directory: Flutter
+        run: |
+          set +e
+          flutter pub get
+          analyze_out=$(flutter analyze --no-fatal-infos 2>&1)
+          analyze_status=$?
+          echo "$analyze_out"
+          if [ $analyze_status -ne 0 ]; then
+            echo "$analyze_out" | grep -E "error •|warning •" | head -n 15 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $analyze_status
+          fi
+
+          test_out=$(flutter test --reporter expanded 2>&1)
+          test_status=$?
+          echo "$test_out"
+          if [ $test_status -ne 0 ]; then
+            echo "$test_out" | grep -A 3 -E "\[E\]|The following|Actual:|Expected:|Exception:|Some tests failed" | head -n 30 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $test_status
+          fi
+
+      - name: Build signed release APK
+        id: build
+        working-directory: Flutter
+        env:
+          API_BASE_URL: ${{ github.event.inputs.api_base_url || vars.ORBITCARE_API_BASE_URL || '' }}
+        run: |
+          set +e
+          if [ -n "$API_BASE_URL" ]; then
+            echo "default_api_configured=true" >> "$GITHUB_OUTPUT"
+            output=$(flutter build apk --release --dart-define="ORBITCARE_API_BASE_URL=$API_BASE_URL" 2>&1)
+          else
+            echo "default_api_configured=false" >> "$GITHUB_OUTPUT"
+            output=$(flutter build apk --release 2>&1)
+          fi
+          status=$?
+          echo "$output"
+          if [ $status -ne 0 ]; then
+            echo "$output" | grep -E "FAILURE:|What went wrong:|> |Error:|Exception:|error:" | head -n 10 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+          fi
+          exit $status
+
+      - name: Verify APK metadata, cryptographic signature & SHA-256
+        id: verify
+        run: |
+          set -euo pipefail
+          RAW_APK="Flutter/build/app/outputs/flutter-apk/app-release.apk"
+          OUT_DIR="/tmp/orbitcare-release-assets"
+          mkdir -p "$OUT_DIR"
+          SIGNED_APK="$OUT_DIR/$APK_FILENAME"
+          cp "$RAW_APK" "$SIGNED_APK"
+
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          AAPT2=$(ls -d "$SDK_ROOT"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$AAPT2" ] && [ -x "$AAPT2" ]; then
+            BADGING=$("$AAPT2" dump badging "$SIGNED_APK")
+            echo "$BADGING" | head -n 20
+            echo "$BADGING" | grep -q "package: name='com.orbitcare.astronauthealth'" || {
+              echo "::error::Unexpected package ID in APK badging"
+              exit 1
+            }
+            echo "$BADGING" | grep -q "versionCode='${VERSION_CODE}'" || {
+              echo "::error::Unexpected versionCode in APK badging (expected ${VERSION_CODE})"
+              exit 1
+            }
+            echo "$BADGING" | grep -q "versionName='${VERSION_NAME}'" || {
+              echo "::error::Unexpected versionName in APK badging (expected ${VERSION_NAME})"
+              exit 1
+            }
+            echo "$BADGING" | grep -q "uses-permission: name='android.permission.INTERNET'" || {
+              echo "::error::Missing android.permission.INTERNET in APK badging"
+              exit 1
+            }
+          fi
+
+          APKSIGNER=$(ls -d "$SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$APKSIGNER" ] && [ -x "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --verbose --print-certs "$SIGNED_APK"
+          else
+            jarsigner -verify -verbose -certs "$SIGNED_APK"
+          fi
+
+          (cd "$OUT_DIR" && sha256sum "$APK_FILENAME" > "${APK_FILENAME}.sha256" && sha256sum -c "${APK_FILENAME}.sha256")
+          SHA_VAL=$(awk '{print $1}' "$OUT_DIR/${APK_FILENAME}.sha256")
+          APK_BYTES=$(stat -c%s "$SIGNED_APK")
+          echo "sha256=$SHA_VAL" >> "$GITHUB_OUTPUT"
+          echo "apk_bytes=$APK_BYTES" >> "$GITHUB_OUTPUT"
+          cat "$OUT_DIR/${APK_FILENAME}.sha256"
+          ls -lh "$SIGNED_APK"
+
+      - name: Clean up ephemeral signing credentials
+        if: always()
+        run: rm -f /tmp/orbitcare-release.jks Flutter/android/key.properties
+
+      - name: Upload signed APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrbitCare-Demo-v${{ steps.meta.outputs.version_name }}-apk
+          path: |
+            /tmp/orbitcare-release-assets/${{ steps.meta.outputs.apk_filename }}
+            /tmp/orbitcare-release-assets/${{ steps.meta.outputs.apk_filename }}.sha256
+          retention-days: 30
+
+  verify-apk-on-emulator:
+    name: Install & Smoke-Test APK on Android 14 Emulator
+    needs: build-signed-apk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download built signed APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: OrbitCare-Demo-v${{ needs.build-signed-apk.outputs.version_name }}-apk
+          path: /tmp/orbitcare-emulator-verify
+
+      - name: Verify APK SHA-256 before emulator install
+        working-directory: /tmp/orbitcare-emulator-verify
+        run: |
+          set -euo pipefail
+          sha256sum -c "${{ needs.build-signed-apk.outputs.apk_filename }}.sha256"
+
+      - name: Enable KVM permissions for Android Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -la /dev/kvm || true
+
+      - name: Prepare Android Emulator verification script
+        env:
+          APK_FILENAME: ${{ needs.build-signed-apk.outputs.apk_filename }}
+        run: |
+          cat <<'EOF' > /tmp/verify-apk.sh
+          #!/usr/bin/env bash
+          set -euo pipefail
+          APK="/tmp/orbitcare-emulator-verify/__APK_FILENAME__"
+          PKG="com.orbitcare.astronauthealth"
+
+          echo "=== Installing signed release APK: $APK ==="
+          if ! adb install -r "$APK"; then
+            echo "::error::adb install failed for $APK"
+            exit 1
+          fi
+
+          echo "=== Verifying package installation ==="
+          if ! adb shell pm list packages | grep -q "package:${PKG}"; then
+            echo "::error::Package ${PKG} not found after adb install"
+            exit 1
+          fi
+
+          echo "=== Cold launch #1 ==="
+          adb logcat -c
+          adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
+          sleep 10
+
+          PID1=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
+          echo "Running PID (launch #1): ${PID1:-NONE}"
+          if [ -z "$PID1" ]; then
+            adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::OrbitCare process exited unexpectedly on launch #1"
+            exit 1
+          fi
+
+          if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
+            adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::Fatal AndroidRuntime crash detected on launch #1"
+            exit 1
+          fi
+
+          echo "=== Focused window check ==="
+          adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | head -n 5 || true
+
+          echo "=== Cold restart (launch #2) ==="
+          adb shell am force-stop "$PKG"
+          sleep 2
+          adb logcat -c
+          adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
+          sleep 8
+
+          PID2=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
+          echo "Running PID (launch #2): ${PID2:-NONE}"
+          if [ -z "$PID2" ]; then
+            adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::OrbitCare process exited unexpectedly on launch #2"
+            exit 1
+          fi
+
+          if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
+            adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::Fatal AndroidRuntime crash detected on launch #2"
+            exit 1
+          fi
+
+          echo "=== Android 14 Emulator verification PASSED (install, launch #1, restart #2, zero fatal crashes) ==="
+          EOF
+          sed -i "s|__APK_FILENAME__|${APK_FILENAME}|g" /tmp/verify-apk.sh
+          chmod +x /tmp/verify-apk.sh
+
+      - name: Boot Android 14 Emulator, install APK, and verify startup & restart
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 300
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash /tmp/verify-apk.sh
+
+  publish-demo-release:
+    name: Publish Verified Demo APK to GitHub Release
+    needs: [build-signed-apk, verify-apk-on-emulator]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: OrbitCare-Demo-v${{ needs.build-signed-apk.outputs.version_name }}-apk
+          path: /tmp/orbitcare-release-publish
+
+      - name: Publish separate Demo APK GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_NAME: ${{ needs.build-signed-apk.outputs.version_name }}
+          VERSION_CODE: ${{ needs.build-signed-apk.outputs.version_code }}
+          RELEASE_TAG: ${{ needs.build-signed-apk.outputs.release_tag }}
+          APK_FILENAME: ${{ needs.build-signed-apk.outputs.apk_filename }}
+          SIGNING_MODE: ${{ needs.build-signed-apk.outputs.signing_mode }}
+          DEFAULT_API_CONFIGURED: ${{ needs.build-signed-apk.outputs.default_api_configured }}
+          SHA_VAL: ${{ needs.build-signed-apk.outputs.sha256 }}
+          APK_BYTES: ${{ needs.build-signed-apk.outputs.apk_bytes }}
+        run: |
+          set -euo pipefail
+          if [ "$RELEASE_TAG" = "v1.0.0-apk" ] || [ "$RELEASE_TAG" = "v1.1.0-apk" ]; then
+            echo "::error::Refusing to overwrite previous release ${RELEASE_TAG}; bump version or pass a new tag."
+            exit 1
+          fi
+
+          APK_PATH="/tmp/orbitcare-release-publish/$APK_FILENAME"
+          SHA_PATH="/tmp/orbitcare-release-publish/${APK_FILENAME}.sha256"
+          (cd /tmp/orbitcare-release-publish && sha256sum -c "${APK_FILENAME}.sha256")
+
+          NOTES=$(cat <<EOF
+          ## OrbitCare Demo v${VERSION_NAME} (Build ${VERSION_CODE}) — Presentation-Ready Signed Android APK
+
+          ### Presentation-Ready Highlights (Offline Demo Mode + Intact Production Backend Support)
+          - **One-Tap Offline Demo Entry:** Added **Continue as Demo User** on both **Log In** and **Create Account** — opens the complete OrbitCare application immediately with zero backend, MongoDB, SMTP, OTP, or internet requirement.
+          - **Original OrbitCare UI Preserved:** Keeps the existing branding, splash, 3-page onboarding, 4-tab workspace (\`Overview\`, \`Vitals\`, \`Alerts\`, \`Reports\`), \`Log Vitals\` form, and DEC-001 Cognitive State research card intact, adding only clear **DEMO MODE** indicators and a **Profile & Settings** screen.
+          - **Complete Local Synthetic Data Engine:** Populated with 10 internally consistent synthetic astronaut measurements across 14 days (supporting live **Daily**, **Weekly**, and **Monthly** report aggregations and visual Heart Rate / SpO2 trends), 5 representative alerts across \`CRITICAL\`, \`HIGH\`, \`MEDIUM\`, and \`LOW\` severities (with tappable Alert Details modal, local **Mark as Read**, and **Unread Only** filtering), local **Log Vitals** entry, and persistent **Profile & Settings** (°C/°F unit toggle, local demo threshold alerts toggle, and **Reset Demo Data**).
+          - **DEC-001 Cognitive State Safety Preserved Offline:** Operates locally in Demo Mode with honest \`INSUFFICIENT_DATA\` safe abstention and provenance-labeled **Synthetic Demo** output — never fabricating clinical predictions or failing with a missing backend URL error.
+          - **Production Code Intact:** Production authentication, \`Configure Server URL\`, real \`GET /api/health\` testing, and backend services remain completely separate and unaffected.
+
+          ### Artifact & Runtime Verification
+          - **Application ID:** \`com.orbitcare.astronauthealth\`
+          - **Version:** \`${VERSION_NAME}\` (\`versionCode ${VERSION_CODE}\`)
+          - **APK File:** \`${APK_FILENAME}\` (\`${APK_BYTES}\` bytes)
+          - **Signing Mode:** \`${SIGNING_MODE}\` (verified with Android \`apksigner\` and \`aapt2 dump badging\`)
+          - **Android 14 Emulator Verification:** Passed \`adb install\`, cold launch #1, cold restart #2, running process check, and zero \`FATAL EXCEPTION\` logcat check on API 34 x86_64 emulator.
+          - **Build-Time Production Backend Baked In:** \`${DEFAULT_API_CONFIGURED}\`
+          - **SHA-256:** \`${SHA_VAL}\`
+          - **Build Commit:** \`${GITHUB_SHA}\`
+
+          ### Installation & Live Presentation Walkthrough
+          1. Uninstall any previous OrbitCare APK signed with a different CI release key.
+          2. Download and install **\`${APK_FILENAME}\`** on your Android phone (allow **Install unknown apps** if prompted).
+          3. Launch **OrbitCare** -> step through the 3 onboarding slides (or tap **Skip**) -> tap **Continue as Demo User**.
+          4. Present **Overview** (latest vitals + DEC-001 Cognitive State card -> tap **Synthetic Demo**), **Vitals** (trend chart + history + **Log Vitals**), **Alerts** (tap any alert for full details + **Mark as Read** + **Unread Only**), **Reports** (**Daily** / **Weekly** / **Monthly**), and **Profile & Settings** (astronaut mission profile, **°C / °F** toggle, **Reset Demo Data**, and **Exit Demo Mode**).
+          5. Close and reopen the app to verify Demo Mode and local entries persist cleanly offline.
+
+          ### Known Limitations & Disclosures
+          - **Demo Mode Data Provenance:** All measurements, alerts, and reports in Demo Mode are locally stored synthetic sample data — not real biometric sensors, live server records, or clinical alerts.
+          - **Production Backend Deployment Separate:** Real email/OTP account registration still requires deploying \`backend/\` (blueprints included in \`render.yaml\` and \`backend/Dockerfile\`) with live MongoDB Atlas + SMTP credentials and configuring its HTTPS URL via **Configure Server URL**.
+          - **Safety Notice:** Hackathon prototype only — not a medical diagnostic or flight-certified system. DEC-001 Cognitive State Monitoring remains experimental and non-diagnostic.
+          EOF
+          )
+
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "OrbitCare Demo v${VERSION_NAME} Signed Android APK" --notes "$NOTES" --prerelease
+          else
+            gh release create "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "OrbitCare Demo v${VERSION_NAME} Signed Android APK" \
+              --notes "$NOTES" \
+              --prerelease
+          fi

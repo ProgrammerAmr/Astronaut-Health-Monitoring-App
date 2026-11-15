@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nasa/cognitive_state/services/csm_http_transport.dart';
+import 'package:nasa/core/config/api_config.dart';
 import 'package:nasa/core/models/orbitcare_models.dart';
 import 'package:nasa/core/services/orbitcare_api_client.dart';
 import 'package:nasa/core/state/session_controller.dart';
@@ -346,6 +348,321 @@ void main() {
 
       expect(resetSubmitted, isTrue);
       expect(find.text('Welcome Back'), findsOneWidget);
+    });
+
+    testWidgets('LoginScreen allows configuring, testing, and persisting backend Server URL at runtime',
+        (tester) async {
+      final storage = InMemorySessionStorage();
+      var healthChecked = false;
+      final api = OrbitCareApiClient(
+        baseUrl: '',
+        transport: _MockTransport((method, uri, headers, body) async {
+          if (method == 'GET' && uri.path == '/api/health') {
+            healthChecked = true;
+            return _jsonResp(200, {
+              'success': true,
+              'message': 'OrbitCare API is running',
+              'database': 'connected',
+            });
+          }
+          return _jsonResp(404, {'message': 'Not found'});
+        }),
+      );
+      final controller = SessionController(apiClient: api, storage: storage);
+
+      await tester.pumpWidget(
+        OrbitCareApp(
+          sessionController: controller,
+          initialRoute: AppRoutes.login,
+        ),
+      );
+
+      expect(controller.apiClient.isConfigured, isFalse);
+      await tester.tap(find.byKey(const Key('configure_server_url_btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('server_url_input')),
+        'https://demo.orbitcare.example/api/',
+      );
+      final testBtn = find.byKey(const Key('test_connection_btn'));
+      await tester.ensureVisible(testBtn);
+      await tester.tap(testBtn);
+      await tester.pumpAndSettle();
+
+      expect(healthChecked, isTrue);
+      expect(find.textContaining('Connected'), findsOneWidget);
+
+      final saveBtn = find.byKey(const Key('save_server_url_btn'));
+      await tester.ensureVisible(saveBtn);
+      await tester.tap(saveBtn);
+      await tester.pumpAndSettle();
+
+      expect(controller.apiClient.isConfigured, isTrue);
+      expect(controller.apiBaseUrl, 'https://demo.orbitcare.example');
+      expect(await storage.readApiBaseUrl(), 'https://demo.orbitcare.example');
+    });
+
+    testWidgets(
+      'SignupScreen shows user-friendly server setup CTA when unconfigured, allows configuring & testing /api/health, then creates account',
+      (tester) async {
+        final storage = InMemorySessionStorage();
+        var healthCalled = false;
+        var registerCalled = false;
+
+        final api = OrbitCareApiClient(
+          baseUrl: '',
+          transport: _MockTransport((method, uri, headers, body) async {
+            if (method == 'GET' && uri.path == '/api/health') {
+              healthCalled = true;
+              return _jsonResp(200, {
+                'success': true,
+                'message': 'OrbitCare API is running',
+                'database': 'connected',
+              });
+            }
+            if (method == 'POST' && uri.path == '/api/auth/register') {
+              registerCalled = true;
+              final parsed = jsonDecode(body ?? '{}') as Map<String, dynamic>;
+              expect(parsed['fullName'], 'Dr. Nadia Salem');
+              expect(parsed['email'], 'nadia@orbitcare.test');
+              return _jsonResp(201, {
+                'success': true,
+                'message': 'User registered successfully',
+              });
+            }
+            return _jsonResp(404, {'message': 'Not found'});
+          }),
+        );
+
+        final controller = SessionController(apiClient: api, storage: storage);
+        await tester.pumpWidget(
+          OrbitCareApp(
+            sessionController: controller,
+            initialRoute: AppRoutes.signup,
+          ),
+        );
+
+        // Must NOT show raw developer --dart-define flag on Signup screen.
+        expect(find.textContaining('--dart-define'), findsNothing);
+        expect(
+          find.byKey(const Key('signup_configure_server_url_btn')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('signup_configure_server_url_btn')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('server_url_input')),
+          'https://api.orbitcare.example/api/api/',
+        );
+        final testBtn = find.byKey(const Key('test_connection_btn'));
+        await tester.ensureVisible(testBtn);
+        await tester.tap(testBtn);
+        await tester.pumpAndSettle();
+
+        expect(healthCalled, isTrue);
+        expect(find.textContaining('Connected'), findsOneWidget);
+
+        final saveBtn = find.byKey(const Key('save_server_url_btn'));
+        await tester.ensureVisible(saveBtn);
+        await tester.tap(saveBtn);
+        await tester.pumpAndSettle();
+
+        expect(controller.apiBaseUrl, 'https://api.orbitcare.example');
+        expect(await storage.readApiBaseUrl(), 'https://api.orbitcare.example');
+
+        // Fill Signup form and create account against configured URL.
+        final fields = find.byType(TextField);
+        await tester.enterText(fields.at(0), 'Dr. Nadia Salem');
+        await tester.enterText(fields.at(1), 'nadia@orbitcare.test');
+        await tester.enterText(fields.at(2), 'OrbitPass!2026');
+        await tester.enterText(fields.at(3), 'OrbitPass!2026');
+
+        final createBtn = find.widgetWithText(ElevatedButton, 'Create Account');
+        await tester.ensureVisible(createBtn);
+        await tester.tap(createBtn);
+        await tester.pumpAndSettle();
+
+        expect(registerCalled, isTrue);
+        expect(find.text('Verify Your Email'), findsOneWidget);
+      },
+    );
+  });
+
+  group('API URL validation, precedence, persistence, and /api/health checks', () {
+    test('normalizeApiBaseUrl strips trailing slashes and duplicate /api suffixes', () {
+      expect(
+        normalizeApiBaseUrl('  https://api.orbitcare.example/api/api///  '),
+        'https://api.orbitcare.example',
+      );
+      expect(
+        normalizeApiBaseUrl('http://192.168.1.50:5000/api'),
+        'http://192.168.1.50:5000',
+      );
+      expect(
+        validateApiBaseUrl('api.orbitcare.example'),
+        contains('https:// or http://'),
+      );
+      expect(
+        validateApiBaseUrl('https://user:pass@api.orbitcare.example'),
+        contains('credentials'),
+      );
+      expect(validateApiBaseUrl(''), isNotNull);
+    });
+
+    test('resolveEffectiveApiBaseUrl enforces saved > buildDefault > unconfigured', () {
+      final fromSaved = resolveEffectiveApiBaseUrl(
+        savedUrl: 'https://saved.orbitcare.example/api/',
+        buildDefaultUrl: 'https://default.orbitcare.example',
+      );
+      expect(fromSaved.baseUrl, 'https://saved.orbitcare.example');
+      expect(fromSaved.source, ApiUrlSource.saved);
+
+      final fromDefault = resolveEffectiveApiBaseUrl(
+        savedUrl: '',
+        buildDefaultUrl: 'https://default.orbitcare.example/api',
+      );
+      expect(fromDefault.baseUrl, 'https://default.orbitcare.example');
+      expect(fromDefault.source, ApiUrlSource.buildDefault);
+
+      final unconfigured = resolveEffectiveApiBaseUrl(
+        savedUrl: null,
+        buildDefaultUrl: '',
+      );
+      expect(unconfigured.isConfigured, isFalse);
+      expect(unconfigured.source, ApiUrlSource.unconfigured);
+    });
+
+    test('ensureConfigLoaded restores persisted URL on restart and reset restores build default',
+        () async {
+      final storage = InMemorySessionStorage();
+      await storage.writeApiBaseUrl('https://saved.orbitcare.example');
+
+      final api = OrbitCareApiClient(
+        baseUrl: 'https://default.orbitcare.example',
+        transport: _MockTransport((m, u, h, b) async => _jsonResp(200, {'success': true})),
+      );
+      final controller = SessionController(
+        apiClient: api,
+        storage: storage,
+        buildDefaultBaseUrl: 'https://default.orbitcare.example',
+      );
+
+      await controller.ensureConfigLoaded();
+      expect(controller.apiBaseUrl, 'https://saved.orbitcare.example');
+      expect(controller.urlSource, ApiUrlSource.saved);
+
+      await controller.resetApiBaseUrlToDefault();
+      expect(controller.apiBaseUrl, 'https://default.orbitcare.example');
+      expect(controller.urlSource, ApiUrlSource.buildDefault);
+      expect(await storage.readApiBaseUrl(), isNull);
+    });
+
+    test('checkHealth distinguishes connected, timeout, unreachable, serverError, invalidUrl, and missingConfig',
+        () async {
+      final apiMissing = OrbitCareApiClient(
+        baseUrl: '',
+        transport: _MockTransport((m, u, h, b) async => _jsonResp(200, {'success': true})),
+      );
+      expect(
+        (await apiMissing.checkHealth()).status,
+        ConnectionCheckStatus.missingConfig,
+      );
+      expect(
+        (await apiMissing.checkHealth(baseUrlOverride: 'not-a-url')).status,
+        ConnectionCheckStatus.invalidUrl,
+      );
+
+      final apiConnected = OrbitCareApiClient(
+        baseUrl: 'https://ok.orbitcare.test',
+        transport: _MockTransport((m, u, h, b) async {
+          expect(m, 'GET');
+          expect(u.toString(), 'https://ok.orbitcare.test/api/health');
+          return _jsonResp(200, {
+            'success': true,
+            'message': 'OrbitCare API is running',
+            'database': 'connected',
+          });
+        }),
+      );
+      final okResult = await apiConnected.checkHealth();
+      expect(okResult.status, ConnectionCheckStatus.connected);
+      expect(okResult.statusCode, 200);
+      expect(okResult.databaseStatus, 'connected');
+
+      final apiTimeout = OrbitCareApiClient(
+        baseUrl: 'https://slow.orbitcare.test',
+        transport: _MockTransport((m, u, h, b) async {
+          throw TimeoutException('request timed out');
+        }),
+      );
+      expect(
+        (await apiTimeout.checkHealth()).status,
+        ConnectionCheckStatus.timeout,
+      );
+
+      final apiUnreachable = OrbitCareApiClient(
+        baseUrl: 'https://down.orbitcare.test',
+        transport: _MockTransport((m, u, h, b) async {
+          throw Exception('SocketException: Connection refused');
+        }),
+      );
+      expect(
+        (await apiUnreachable.checkHealth()).status,
+        ConnectionCheckStatus.unreachable,
+      );
+
+      final apiServerError = OrbitCareApiClient(
+        baseUrl: 'https://err.orbitcare.test',
+        transport: _MockTransport((m, u, h, b) async {
+          return _jsonResp(503, {'message': 'Database unavailable'});
+        }),
+      );
+      final errResult = await apiServerError.checkHealth();
+      expect(errResult.status, ConnectionCheckStatus.serverError);
+      expect(errResult.statusCode, 503);
+    });
+
+    test('getMe unwraps backend nested { status: success, data: { user } } payload', () async {
+      final api = OrbitCareApiClient(
+        baseUrl: 'https://api.orbitcare.test',
+        transport: _MockTransport((method, uri, headers, body) async {
+          expect(method, 'GET');
+          expect(uri.path, '/api/users/me');
+          expect(headers['Authorization'], 'Bearer tok-123');
+          return _jsonResp(200, {
+            'status': 'success',
+            'data': {
+              'user': {
+                '_id': 'usr-42',
+                'name': 'Commander Elena Rostova',
+                'email': 'elena@orbitcare.test',
+                'role': 'astronaut',
+              },
+            },
+          });
+        }),
+      );
+
+      final user = await api.getMe(token: 'tok-123');
+      expect(user.id, 'usr-42');
+      expect(user.name, 'Commander Elena Rostova');
+      expect(user.email, 'elena@orbitcare.test');
+    });
+
+    test('DashboardAverages parses backend average* keys as well as avg* keys', () {
+      final averages = DashboardAverages.fromJson({
+        'averageHeartRate': 76.5,
+        'averageSpo2': 98.4,
+        'averageRespiratoryRate': 15.2,
+        'averageTemperature': 36.8,
+      });
+      expect(averages.heartRate, 76.5);
+      expect(averages.spo2, 98.4);
+      expect(averages.respiratoryRate, 15.2);
+      expect(averages.temperature, 36.8);
     });
   });
 

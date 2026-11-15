@@ -5,7 +5,6 @@ import '../constants/app_widgets.dart';
 import '../core/models/orbitcare_models.dart';
 import '../core/state/session_controller.dart';
 import '../routes/app_routes.dart';
-import '../settings/backend_connection_bar.dart';
 import 'auth_status_banner.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,26 +21,27 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSendingVerifyOtp = false;
   bool _showVerifyEmailAction = false;
-  bool _showConnectionAction = false;
+  bool _showConfigAction = false;
   String? _errorMessage;
   String? _infoNotice;
-  bool _checkedNotice = false;
+  bool _checkedStartup = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_checkedNotice) {
-      _checkedNotice = true;
-      final notice = SessionScope.maybeOf(context)?.consumeNotice();
+    if (!_checkedStartup) {
+      _checkedStartup = true;
+      final sessionController = SessionScope.maybeOf(context);
+      final notice = sessionController?.consumeNotice();
       if (notice != null && notice.trim().isNotEmpty) {
         if (_looksLikeConnectionProblem(notice)) {
-          // Surface splash/startup connectivity failures with a direct fix path.
           _errorMessage = notice;
-          _showConnectionAction = true;
+          _showConfigAction = true;
         } else {
           _infoNotice = notice;
         }
       }
+      sessionController?.ensureConfigLoaded();
     }
   }
 
@@ -66,6 +66,49 @@ class _LoginScreenState extends State<LoginScreen> {
     return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email);
   }
 
+  Future<void> _openServerConfig() async {
+    final sessionController = SessionScope.maybeOf(context);
+    final saved = await Navigator.pushNamed(context, AppRoutes.serverConfig);
+    if (saved == true && mounted && sessionController != null) {
+      setState(() {
+        _errorMessage = null;
+        _showConfigAction = false;
+        _infoNotice = 'Backend server set to ${sessionController.apiBaseUrl}';
+      });
+    }
+  }
+
+  Future<void> _handleEnterDemoMode() async {
+    final sessionController = SessionScope.maybeOf(context);
+    if (sessionController == null || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await sessionController.enterDemoMode();
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+        (_) => false,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Unable to open Demo Mode right now. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
@@ -74,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter a valid email address.';
         _showVerifyEmailAction = false;
-        _showConnectionAction = false;
+        _showConfigAction = false;
       });
       return;
     }
@@ -83,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter your password.';
         _showVerifyEmailAction = false;
-        _showConnectionAction = false;
+        _showConfigAction = false;
       });
       return;
     }
@@ -96,12 +139,25 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    await sessionController.ensureConfigLoaded();
+    if (!mounted) return;
+
+    if (!sessionController.isProductionApiConfigured) {
+      setState(() {
+        _errorMessage =
+            'Backend server URL is not configured yet. Configure your server connection, or tap "Continue as Demo User" to explore OrbitCare offline.';
+        _showConfigAction = true;
+        _showVerifyEmailAction = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _infoNotice = null;
       _showVerifyEmailAction = false;
-      _showConnectionAction = false;
+      _showConfigAction = false;
     });
 
     try {
@@ -117,13 +173,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = e.message;
         _showVerifyEmailAction = e.isUnverified;
-        _showConnectionAction = e.isNetworkError || e.isConfigError;
+        _showConfigAction = e.isConfigError || e.isNetworkError;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Unable to sign in right now. Please try again.';
-        _showConnectionAction = true;
+        _showConfigAction = true;
       });
     } finally {
       if (mounted) {
@@ -134,29 +190,20 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _openConnectionSettings() async {
-    await Navigator.pushNamed(context, AppRoutes.connectionSettings);
-    if (!mounted) return;
-    // The backend URL may have changed: clear a stale connection error.
-    setState(() {
-      if (_showConnectionAction) {
-        _errorMessage = null;
-        _showConnectionAction = false;
-      }
-    });
-  }
-
   Future<void> _sendVerificationOtpAndOpen() async {
     final email = emailController.text.trim();
     final sessionController = SessionScope.maybeOf(context);
     if (sessionController == null || !_isValidEmail(email)) return;
+
+    await sessionController.ensureConfigLoaded();
+    if (!mounted) return;
 
     setState(() {
       _isSendingVerifyOtp = true;
     });
 
     try {
-      await sessionController.apiClient.sendOtp(
+      await sessionController.productionApiClient.sendOtp(
         email: email,
         purpose: 'signup',
       );
@@ -182,6 +229,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sessionController = SessionScope.maybeOf(context);
+    final apiConfigured = sessionController?.isProductionApiConfigured ?? false;
+    final activeBaseUrl = sessionController?.apiBaseUrl ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -192,7 +243,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 15),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: const Key('configure_server_url_btn'),
+                  onPressed: _isLoading ? null : _openServerConfig,
+                  icon: Icon(
+                    apiConfigured ? Icons.cloud_done_outlined : Icons.settings,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                  label: Text(
+                    apiConfigured ? 'Server Settings' : 'Configure Server URL',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
               const OrbitLogo(height: 95),
               const SizedBox(height: 18),
               const Text(
@@ -214,8 +283,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              BackendConnectionBar(onTap: _openConnectionSettings),
-              const SizedBox(height: 16),
+              if (!apiConfigured) ...[
+                AuthStatusBanner(
+                  isError: false,
+                  message:
+                      'Backend server URL is not configured yet. Configure and test your server before signing in.',
+                  action: TextButton.icon(
+                    onPressed: _isLoading ? null : _openServerConfig,
+                    icon: const Icon(Icons.dns_outlined, size: 18),
+                    label: const Text('Configure Server URL'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else if (activeBaseUrl.isNotEmpty && _infoNotice == null) ...[
+                Text(
+                  'Server: $activeBaseUrl',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.grey,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               if (_infoNotice != null) ...[
                 AuthStatusBanner(
                   isError: false,
@@ -232,20 +321,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: _isSendingVerifyOtp
                               ? null
                               : _sendVerificationOtpAndOpen,
-                          icon: const Icon(Icons.verified_user_outlined,
-                              size: 18),
+                          icon: const Icon(
+                            Icons.verified_user_outlined,
+                            size: 18,
+                          ),
                           label: Text(
                             _isSendingVerifyOtp
                                 ? 'Sending OTP...'
                                 : 'Send Verification OTP',
                           ),
                         )
-                      : (_showConnectionAction
+                      : (_showConfigAction
                           ? TextButton.icon(
-                              onPressed: _openConnectionSettings,
-                              icon: const Icon(Icons.settings_ethernet,
-                                  size: 18),
-                              label: const Text('Open Connection Settings'),
+                              onPressed:
+                                  _isLoading ? null : _openServerConfig,
+                              icon: const Icon(Icons.settings, size: 18),
+                              label: const Text('Configure Server URL'),
                             )
                           : null),
                 ),
@@ -310,6 +401,65 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: Icons.arrow_forward,
                       isLoading: _isLoading,
                       onPressed: _isLoading ? null : _handleLogin,
+                    ),
+                    const SizedBox(height: 14),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider(color: AppColors.border)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: AppColors.border)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        key: const Key('continue_demo_user_btn'),
+                        onPressed: _isLoading ? null : _handleEnterDemoMode,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.navy,
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.4,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.science_outlined,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                        label: const Text(
+                          'Continue as Demo User',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.navy,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Offline Demo Mode • Uses local synthetic astronaut data (no backend required)',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.grey,
+                      ),
                     ),
                   ],
                 ),

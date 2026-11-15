@@ -39,11 +39,18 @@ function lanAddresses() {
 }
 
 app.get("/api/health", (req, res) => {
+  const smtpConfigured = Boolean(
+    process.env.SMTP_HOST &&
+      process.env.SMTP_PORT &&
+      process.env.SMTP_USER &&
+      process.env.SMTP_PASS
+  );
   res.status(200).json({
     success: true,
     message: "OrbitCare API is running",
     status: "ok",
     database: mongoState(),
+    emailConfigured: smtpConfigured,
     environment: process.env.NODE_ENV || "development",
     version: require("./package.json").version,
     uptimeSeconds: Math.round(process.uptime())

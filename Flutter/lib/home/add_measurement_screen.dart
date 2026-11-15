@@ -238,6 +238,8 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDemoMode = SessionScope.maybeOf(context)?.isDemoMode ?? false;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -259,9 +261,11 @@ class _AddMeasurementScreenState extends State<AddMeasurementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Enter one or more vital signs below. Values are saved to your authenticated OrbitCare record.',
-                style: TextStyle(
+              Text(
+                isDemoMode
+                    ? 'Demo Mode (Offline): Enter one or more vital signs below. Values are saved locally on this device only and are not sent to a live server.'
+                    : 'Enter one or more vital signs below. Values are saved to your authenticated OrbitCare record.',
+                style: const TextStyle(
                   fontSize: 13.5,
                   color: AppColors.grey,
                   height: 1.4,

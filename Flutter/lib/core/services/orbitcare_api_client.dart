@@ -67,7 +67,7 @@ class OrbitCareApiClient {
       throw const OrbitCareApiException(
         code: 'API_BASE_URL_UNCONFIGURED',
         message:
-            'OrbitCare backend URL is not configured. Launch with --dart-define=ORBITCARE_API_BASE_URL=<backend-url>.',
+            'Backend server URL is not configured yet. Open Configure Server URL to set and test your OrbitCare backend address.',
       );
     }
 
@@ -131,6 +131,92 @@ class OrbitCareApiClient {
       return null;
     } catch (_) {
       return null;
+    }
+  }
+
+  // -------------------- CONNECTION VALIDATION --------------------
+
+  /// Probes `GET /api/health` against [baseUrlOverride] (or the active baseUrl)
+  /// to verify real backend reachability. Never reports success based only on
+  /// URL syntax validation.
+  Future<ConnectionCheckResult> checkHealth({String? baseUrlOverride}) async {
+    final rawCandidate = (baseUrlOverride ?? baseUrl).trim();
+    if (rawCandidate.isEmpty) {
+      return const ConnectionCheckResult(
+        status: ConnectionCheckStatus.missingConfig,
+        message:
+            'No backend server URL is configured. Enter your OrbitCare backend URL to test the connection.',
+      );
+    }
+
+    final validationError = validateApiBaseUrl(rawCandidate);
+    if (validationError != null) {
+      return ConnectionCheckResult(
+        status: ConnectionCheckStatus.invalidUrl,
+        message: validationError,
+      );
+    }
+
+    final normalized = normalizeApiBaseUrl(rawCandidate);
+    final healthUri = Uri.parse('$normalized/api/health');
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      final response = await _transport.send(
+        method: 'GET',
+        uri: healthUri,
+        headers: const <String, String>{'Accept': 'application/json'},
+        timeout: timeout,
+      );
+      stopwatch.stop();
+      final parsed = _tryDecodeMap(response.body);
+
+      if (response.statusCode == 200 && parsed != null && parsed['success'] == true) {
+        final backendMsg =
+            (parsed['message'] ?? 'OrbitCare API is running').toString();
+        final dbStatus = parsed['database']?.toString();
+        final emailConfigured = parsed['emailConfigured'] is bool
+            ? parsed['emailConfigured'] as bool
+            : null;
+        return ConnectionCheckResult(
+          status: ConnectionCheckStatus.connected,
+          normalizedUrl: normalized,
+          statusCode: response.statusCode,
+          latencyMs: stopwatch.elapsedMilliseconds,
+          databaseStatus: dbStatus,
+          emailConfigured: emailConfigured,
+          message: backendMsg,
+        );
+      }
+
+      final errMsg = parsed?['message']?.toString();
+      return ConnectionCheckResult(
+        status: ConnectionCheckStatus.serverError,
+        normalizedUrl: normalized,
+        statusCode: response.statusCode,
+        latencyMs: stopwatch.elapsedMilliseconds,
+        message: errMsg != null && errMsg.isNotEmpty
+            ? 'Server responded with HTTP ${response.statusCode}: $errMsg'
+            : 'Server responded with HTTP ${response.statusCode} and did not return a valid OrbitCare /api/health payload.',
+      );
+    } on TimeoutException {
+      stopwatch.stop();
+      return ConnectionCheckResult(
+        status: ConnectionCheckStatus.timeout,
+        normalizedUrl: normalized,
+        latencyMs: stopwatch.elapsedMilliseconds,
+        message:
+            'Connection timed out reaching $normalized/api/health. Confirm the backend is running and reachable from this device.',
+      );
+    } catch (_) {
+      stopwatch.stop();
+      return ConnectionCheckResult(
+        status: ConnectionCheckStatus.unreachable,
+        normalizedUrl: normalized,
+        latencyMs: stopwatch.elapsedMilliseconds,
+        message:
+            'Could not reach $normalized/api/health. Verify the host, HTTPS/HTTP scheme, network access, and that the server is not localhost on a physical phone.',
+      );
     }
   }
 
@@ -270,7 +356,11 @@ class OrbitCareApiClient {
         message: 'Unexpected profile response from backend.',
       );
     }
-    return AuthUser.fromJson(Map<String, dynamic>.from(data));
+    final dataMap = Map<String, dynamic>.from(data);
+    final userRaw = dataMap['user'];
+    final effectiveUserMap =
+        userRaw is Map ? Map<String, dynamic>.from(userRaw) : dataMap;
+    return AuthUser.fromJson(effectiveUserMap);
   }
 
   // -------------------- HEALTH DASHBOARD & DATA --------------------

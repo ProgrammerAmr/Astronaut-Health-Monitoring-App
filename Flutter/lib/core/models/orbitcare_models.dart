@@ -20,6 +20,37 @@ class OrbitCareApiException implements Exception {
   String toString() => 'OrbitCareApiException($code, $statusCode): $message';
 }
 
+enum ConnectionCheckStatus {
+  missingConfig,
+  invalidUrl,
+  connected,
+  timeout,
+  unreachable,
+  serverError,
+}
+
+class ConnectionCheckResult {
+  final ConnectionCheckStatus status;
+  final String? normalizedUrl;
+  final String message;
+  final int? statusCode;
+  final int? latencyMs;
+  final String? databaseStatus;
+  final bool? emailConfigured;
+
+  const ConnectionCheckResult({
+    required this.status,
+    required this.message,
+    this.normalizedUrl,
+    this.statusCode,
+    this.latencyMs,
+    this.databaseStatus,
+    this.emailConfigured,
+  });
+
+  bool get isSuccess => status == ConnectionCheckStatus.connected;
+}
+
 class OtpRouteArgs {
   final String email;
   final String purpose; // 'signup' or 'reset_password'
@@ -292,10 +323,12 @@ class DashboardAverages {
 
   factory DashboardAverages.fromJson(Map<String, dynamic> json) {
     return DashboardAverages(
-      heartRate: _toDouble(json['heartRate']),
-      spo2: _toDouble(json['spo2']),
-      respiratoryRate: _toDouble(json['respiratoryRate']),
-      temperature: _toDouble(json['temperature']),
+      heartRate: _toDouble(json['averageHeartRate'] ?? json['heartRate']),
+      spo2: _toDouble(json['averageSpo2'] ?? json['spo2']),
+      respiratoryRate: _toDouble(
+        json['averageRespiratoryRate'] ?? json['respiratoryRate'],
+      ),
+      temperature: _toDouble(json['averageTemperature'] ?? json['temperature']),
     );
   }
 }

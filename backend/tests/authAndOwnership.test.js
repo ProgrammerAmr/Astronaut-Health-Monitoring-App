@@ -432,6 +432,77 @@ describe("OrbitCare Auth, Validation, and User Ownership Enforcement", () => {
     assert.equal(goodReset.json.success, true);
   });
 
+  it("verifies full register -> send-otp -> verify-otp -> login -> /api/users/me -> /api/health contract", async () => {
+    // 1. Health endpoint
+    const health = await reqJson(baseUrl, "/api/health");
+    assert.equal(health.status, 200);
+    assert.equal(health.json.success, true);
+    assert.equal(health.json.message, "OrbitCare API is running");
+    assert.equal(typeof health.json.emailConfigured, "boolean");
+
+    // 2. Register new astronaut (non-production logs dev OTP when SMTP unset)
+    const reg = await reqJson(baseUrl, "/api/auth/register", {
+      method: "POST",
+      body: {
+        fullName: "New Crew Member",
+        email: "newcrew@example.test",
+        password: "OrbitPass!2026",
+      },
+    });
+    assert.equal(reg.status, 201);
+    assert.equal(reg.json.success, true);
+    assert.equal(usersByEmail["newcrew@example.test"].isVerified, false);
+
+    // 3. Resend signup OTP via POST /api/auth/send-otp
+    const resend = await reqJson(baseUrl, "/api/auth/send-otp", {
+      method: "POST",
+      body: {
+        email: "newcrew@example.test",
+        purpose: "signup",
+      },
+    });
+    assert.equal(resend.status, 200);
+    assert.equal(resend.json.success, true);
+
+    // Replace stored hash with known OTP so we can verify end-to-end
+    otps[otps.length - 1].otpHash = hashOtp("778899");
+
+    // 4. Verify signup OTP -> returns JWT + activates user
+    const verify = await reqJson(baseUrl, "/api/auth/verify-otp", {
+      method: "POST",
+      body: {
+        email: "newcrew@example.test",
+        otp: "778899",
+        purpose: "signup",
+      },
+    });
+    assert.equal(verify.status, 200);
+    assert.equal(verify.json.success, true);
+    assert.ok(verify.json.token);
+    assert.equal(verify.json.user.email, "newcrew@example.test");
+    assert.equal(verify.json.user.role, "astronaut");
+
+    // 5. Login with verified credentials
+    const login = await reqJson(baseUrl, "/api/auth/login", {
+      method: "POST",
+      body: {
+        email: "newcrew@example.test",
+        password: "OrbitPass!2026",
+      },
+    });
+    assert.equal(login.status, 200);
+    assert.equal(login.json.success, true);
+    assert.ok(login.json.token);
+
+    // 6. Validate restored session against GET /api/users/me
+    const me = await reqJson(baseUrl, "/api/users/me", {
+      token: login.json.token,
+    });
+    assert.equal(me.status, 200);
+    assert.equal(me.json.status, "success");
+    assert.equal(me.json.data.user.email, "newcrew@example.test");
+  });
+
   it("enforces user ownership on dashboard, measurements, alerts, and reports", async () => {
     const token1 = makeToken(ASTRO_1_ID);
 

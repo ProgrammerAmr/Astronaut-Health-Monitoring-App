@@ -8,9 +8,9 @@ on:
         required: false
         default: ""
       release_tag:
-        description: "GitHub Release tag for signed APK download"
+        description: "Optional GitHub Release tag override (defaults to v<pubspec-version>-apk)"
         required: false
-        default: "v1.0.0-apk"
+        default: ""
   push:
     branches: [main, "arena/**"]
     paths:
@@ -31,6 +31,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Parse version metadata from Flutter/pubspec.yaml
+        run: |
+          set -euo pipefail
+          RAW_VERSION=$(grep -E '^version:' Flutter/pubspec.yaml | head -n 1 | awk '{print $2}' | tr -d '\r')
+          VERSION_NAME="${RAW_VERSION%%+*}"
+          VERSION_CODE="${RAW_VERSION##*+}"
+          if [ -z "$VERSION_NAME" ] || [ -z "$VERSION_CODE" ] || [ "$VERSION_NAME" = "$RAW_VERSION" ]; then
+            echo "::error::Invalid version field in Flutter/pubspec.yaml: $RAW_VERSION"
+            exit 1
+          fi
+          INPUT_TAG="${{ github.event.inputs.release_tag || '' }}"
+          RELEASE_TAG="${INPUT_TAG:-v${VERSION_NAME}-apk}"
+          APK_FILENAME="OrbitCare-v${VERSION_NAME}-signed.apk"
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "APK_FILENAME=$APK_FILENAME" >> "$GITHUB_ENV"
+          echo "Building OrbitCare v${VERSION_NAME} (versionCode ${VERSION_CODE}) -> tag ${RELEASE_TAG}"
 
       - name: Set up Java 21
         uses: actions/setup-java@v5
@@ -83,21 +102,42 @@ jobs:
           storeFile=$KEYSTORE_PATH
           EOF
 
-      - name: Fetch Flutter dependencies & run tests
+      - name: Fetch Flutter dependencies, analyze & run tests
         working-directory: Flutter
         run: |
+          set +e
           flutter pub get
-          flutter test
+          analyze_out=$(flutter analyze --no-fatal-infos 2>&1)
+          analyze_status=$?
+          echo "$analyze_out"
+          if [ $analyze_status -ne 0 ]; then
+            echo "$analyze_out" | grep -E "error •|warning •" | head -n 15 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $analyze_status
+          fi
+
+          test_out=$(flutter test --reporter expanded 2>&1)
+          test_status=$?
+          echo "$test_out"
+          if [ $test_status -ne 0 ]; then
+            echo "$test_out" | grep -E "\[E\]|The following|Actual:|Expected:|Exception:|Some tests failed" | head -n 10 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $test_status
+          fi
 
       - name: Build signed release APK
         working-directory: Flutter
         env:
-          API_BASE_URL: ${{ github.event.inputs.api_base_url || '' }}
+          API_BASE_URL: ${{ github.event.inputs.api_base_url || vars.ORBITCARE_API_BASE_URL || '' }}
         run: |
           set +e
           if [ -n "$API_BASE_URL" ]; then
+            echo "DEFAULT_API_CONFIGURED=true" >> "$GITHUB_ENV"
             output=$(flutter build apk --release --dart-define="ORBITCARE_API_BASE_URL=$API_BASE_URL" 2>&1)
           else
+            echo "DEFAULT_API_CONFIGURED=false" >> "$GITHUB_ENV"
             output=$(flutter build apk --release 2>&1)
           fi
           status=$?
@@ -109,16 +149,38 @@ jobs:
           fi
           exit $status
 
-      - name: Verify APK cryptographic signature & compute SHA-256
+      - name: Verify APK metadata, cryptographic signature & SHA-256
         run: |
           set -euo pipefail
           RAW_APK="Flutter/build/app/outputs/flutter-apk/app-release.apk"
           OUT_DIR="/tmp/orbitcare-release-assets"
           mkdir -p "$OUT_DIR"
-          SIGNED_APK="$OUT_DIR/OrbitCare-v1.0.0-signed.apk"
+          SIGNED_APK="$OUT_DIR/$APK_FILENAME"
           cp "$RAW_APK" "$SIGNED_APK"
 
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          AAPT2=$(ls -d "$SDK_ROOT"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$AAPT2" ] && [ -x "$AAPT2" ]; then
+            BADGING=$("$AAPT2" dump badging "$SIGNED_APK")
+            echo "$BADGING" | head -n 20
+            echo "$BADGING" | grep -q "package: name='com.orbitcare.astronauthealth'" || {
+              echo "::error::Unexpected package ID in APK badging"
+              exit 1
+            }
+            echo "$BADGING" | grep -q "versionCode='${VERSION_CODE}'" || {
+              echo "::error::Unexpected versionCode in APK badging (expected ${VERSION_CODE})"
+              exit 1
+            }
+            echo "$BADGING" | grep -q "versionName='${VERSION_NAME}'" || {
+              echo "::error::Unexpected versionName in APK badging (expected ${VERSION_NAME})"
+              exit 1
+            }
+            echo "$BADGING" | grep -q "uses-permission: name='android.permission.INTERNET'" || {
+              echo "::error::Missing android.permission.INTERNET in APK badging"
+              exit 1
+            }
+          fi
+
           APKSIGNER=$(ls -d "$SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)
           if [ -n "$APKSIGNER" ] && [ -x "$APKSIGNER" ]; then
             "$APKSIGNER" verify --verbose --print-certs "$SIGNED_APK"
@@ -126,8 +188,8 @@ jobs:
             jarsigner -verify -verbose -certs "$SIGNED_APK"
           fi
 
-          (cd "$OUT_DIR" && sha256sum OrbitCare-v1.0.0-signed.apk > OrbitCare-v1.0.0-signed.apk.sha256)
-          cat "$OUT_DIR/OrbitCare-v1.0.0-signed.apk.sha256"
+          (cd "$OUT_DIR" && sha256sum "$APK_FILENAME" > "${APK_FILENAME}.sha256" && sha256sum -c "${APK_FILENAME}.sha256")
+          cat "$OUT_DIR/${APK_FILENAME}.sha256"
           ls -lh "$SIGNED_APK"
 
       - name: Clean up ephemeral signing credentials
@@ -137,45 +199,73 @@ jobs:
       - name: Upload signed APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OrbitCare-v1.0.0-signed-apk
+          name: OrbitCare-v${{ env.VERSION_NAME }}-signed-apk
           path: |
-            /tmp/orbitcare-release-assets/OrbitCare-v1.0.0-signed.apk
-            /tmp/orbitcare-release-assets/OrbitCare-v1.0.0-signed.apk.sha256
+            /tmp/orbitcare-release-assets/${{ env.APK_FILENAME }}
+            /tmp/orbitcare-release-assets/${{ env.APK_FILENAME }}.sha256
           retention-days: 30
 
       - name: Publish signed APK to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.event.inputs.release_tag || 'v1.0.0-apk' }}
         run: |
           set -euo pipefail
-          APK_PATH="/tmp/orbitcare-release-assets/OrbitCare-v1.0.0-signed.apk"
-          SHA_PATH="/tmp/orbitcare-release-assets/OrbitCare-v1.0.0-signed.apk.sha256"
+          if [ "$RELEASE_TAG" = "v1.0.0-apk" ]; then
+            echo "::error::Refusing to overwrite previous v1.0.0-apk release; bump version or pass a new tag."
+            exit 1
+          fi
+
+          APK_PATH="/tmp/orbitcare-release-assets/$APK_FILENAME"
+          SHA_PATH="/tmp/orbitcare-release-assets/${APK_FILENAME}.sha256"
           SHA_VAL=$(awk '{print $1}' "$SHA_PATH")
+          APK_BYTES=$(stat -c%s "$APK_PATH")
 
           NOTES=$(cat <<EOF
-          ## OrbitCare v1.0.0 — Signed Android APK (Hackathon Prototype)
+          ## OrbitCare v${VERSION_NAME} (Build ${VERSION_CODE}) — Signed Android APK
 
+          ### What Changed Since \`v1.0.0-apk\`
+          - Added dedicated **Configure Server URL** screen accessible from **both Login and Sign Up** (as well as Forgot Password when unconfigured), removing the developer-only \`--dart-define\` error message.
+          - Added real **Test Connection** verification probing \`GET /api/health\` with clear loading, connected (with latency & DB status), timeout, unreachable, invalid URL, missing configuration, and server error states.
+          - Hardened backend URL validation and normalization (trailing slashes and duplicate \`/api\` suffixes) with strict precedence (**saved device URL > optional build-time default > unconfigured**) and on-device persistence across restarts.
+          - Fixed \`GET /api/users/me\` profile unwrapping (\`data.user\`) and dashboard averages parsing (\`average*\` keys) to match the Node.js backend contract.
+          - Added deployment blueprints (\`render.yaml\` and \`backend/Dockerfile\`) and enhanced \`GET /api/health\` readiness fields.
+
+          ### Artifact Verification
           - **Application ID:** \`com.orbitcare.astronauthealth\`
-          - **Signing mode:** \`${SIGNING_MODE}\` (verified with Android \`apksigner\`)
+          - **Version:** \`${VERSION_NAME}\` (\`versionCode ${VERSION_CODE}\`)
+          - **APK File:** \`${APK_FILENAME}\` (\`${APK_BYTES}\` bytes)
+          - **Signing Mode:** \`${SIGNING_MODE}\` (verified with Android \`apksigner\` and \`aapt2 dump badging\`)
+          - **Build-Time Default Backend Baked In:** \`${DEFAULT_API_CONFIGURED}\`
           - **SHA-256:** \`${SHA_VAL}\`
-          - **Build commit:** \`${GITHUB_SHA}\`
+          - **Build Commit:** \`${GITHUB_SHA}\`
 
-          ### Installation & Server Setup on Mobile
-          1. Download **OrbitCare-v1.0.0-signed.apk** on your Android device and allow **Install unknown apps** when prompted.
-          2. Open **OrbitCare** -> go to the **Login** screen -> tap **Configure Server URL** to set your running OrbitCare backend URL (e.g. \`https://your-backend.example.com\` or \`http://<LAN-IP>:5000\`).
+          ### Installation Instructions (Android)
+          1. Download **\`${APK_FILENAME}\`** on your Android phone (or verify SHA-256 with **\`${APK_FILENAME}.sha256\`**).
+          2. Open the APK file and enable **Install unknown apps** when Android prompts.
+          3. If \`v1.0.0-apk\` was previously installed with a different ephemeral CI signing key, uninstall \`OrbitCare\` first before installing \`v${VERSION_NAME}\`.
 
-          > **Safety Notice:** Hackathon prototype only — not a clinical, diagnostic, or flight-certified system. DEC-001 Cognitive State Monitoring remains experimental and non-diagnostic.
+          ### Backend Configuration Instructions
+          1. Deploy \`backend/\` to a public HTTPS host (for example via the included \`render.yaml\` blueprint on Render, or \`backend/Dockerfile\` on Railway/Fly.io) with \`MONGO_URI\`, \`JWT_SECRET\`, and SMTP env vars configured, and verify \`GET https://<your-backend>/api/health\` returns \`{"success":true}\`.
+          2. Open **OrbitCare** on your phone -> tap **Configure Server URL** on either **Log In** or **Create Account**.
+          3. Enter your public HTTPS backend URL (do not use \`localhost\` or \`127.0.0.1\` on a physical phone).
+          4. Tap **Test Connection** and confirm **Connected** (\`GET /api/health\` HTTP 200), then tap **Save Server URL**.
+          5. Create an account, enter the 6-digit email OTP, sign in, and restart the app to verify session persistence.
+
+          ### Known Limitations
+          - **Public Backend Deployment Pending Owner Provisioning:** This repository does not include live MongoDB Atlas, SMTP, or cloud hosting credentials, so no pre-deployed public backend URL is bundled into this APK yet.
+          - **Physical-Device E2E Verification Pending Live Backend:** Automated backend (Node.js) and Flutter unit/widget tests verify the auth and \`/api/health\` flows, while live phone testing against a public HTTPS deployment requires deploying \`backend/\` first.
+          - **Signing Key:** Unless repository Android signing secrets (\`ANDROID_KEYSTORE_BASE64\`, \`ANDROID_KEY_ALIAS\`, \`ANDROID_KEY_PASSWORD\`, \`ANDROID_STORE_PASSWORD\`) are configured, CI signs the release APK with a fresh 2048-bit RSA release key per build.
+          - **Safety Notice:** Hackathon prototype only — not a clinical, diagnostic, or flight-certified system. DEC-001 Cognitive State Monitoring remains experimental and non-diagnostic.
           EOF
           )
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" --clobber
-            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --notes "$NOTES" --prerelease
+            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --title "OrbitCare v${VERSION_NAME} Signed Android APK" --notes "$NOTES" --prerelease
           else
             gh release create "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" \
               --target "$GITHUB_SHA" \
-              --title "OrbitCare v1.0.0 Signed Android APK" \
+              --title "OrbitCare v${VERSION_NAME} Signed Android APK" \
               --notes "$NOTES" \
               --prerelease
           fi

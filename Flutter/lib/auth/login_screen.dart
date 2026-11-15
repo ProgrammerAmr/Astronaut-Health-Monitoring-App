@@ -21,19 +21,22 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSendingVerifyOtp = false;
   bool _showVerifyEmailAction = false;
+  bool _showConfigAction = false;
   String? _errorMessage;
   String? _infoNotice;
-  bool _checkedNotice = false;
+  bool _checkedStartup = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_checkedNotice) {
-      _checkedNotice = true;
-      final notice = SessionScope.maybeOf(context)?.consumeNotice();
+    if (!_checkedStartup) {
+      _checkedStartup = true;
+      final sessionController = SessionScope.maybeOf(context);
+      final notice = sessionController?.consumeNotice();
       if (notice != null && notice.trim().isNotEmpty) {
         _infoNotice = notice;
       }
+      sessionController?.ensureConfigLoaded();
     }
   }
 
@@ -48,6 +51,18 @@ class _LoginScreenState extends State<LoginScreen> {
     return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email);
   }
 
+  Future<void> _openServerConfig() async {
+    final sessionController = SessionScope.maybeOf(context);
+    final saved = await Navigator.pushNamed(context, AppRoutes.serverConfig);
+    if (saved == true && mounted && sessionController != null) {
+      setState(() {
+        _errorMessage = null;
+        _showConfigAction = false;
+        _infoNotice = 'Backend server set to ${sessionController.apiBaseUrl}';
+      });
+    }
+  }
+
   Future<void> _handleLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
@@ -56,6 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter a valid email address.';
         _showVerifyEmailAction = false;
+        _showConfigAction = false;
       });
       return;
     }
@@ -64,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter your password.';
         _showVerifyEmailAction = false;
+        _showConfigAction = false;
       });
       return;
     }
@@ -76,11 +93,25 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    await sessionController.ensureConfigLoaded();
+    if (!mounted) return;
+
+    if (!sessionController.apiClient.isConfigured) {
+      setState(() {
+        _errorMessage =
+            'Backend server URL is not configured yet. Configure and test your server connection before signing in.';
+        _showConfigAction = true;
+        _showVerifyEmailAction = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _infoNotice = null;
       _showVerifyEmailAction = false;
+      _showConfigAction = false;
     });
 
     try {
@@ -96,6 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = e.message;
         _showVerifyEmailAction = e.isUnverified;
+        _showConfigAction = e.isConfigError || e.isNetworkError;
       });
     } catch (_) {
       if (!mounted) return;
@@ -115,6 +147,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = emailController.text.trim();
     final sessionController = SessionScope.maybeOf(context);
     if (sessionController == null || !_isValidEmail(email)) return;
+
+    await sessionController.ensureConfigLoaded();
+    if (!mounted) return;
 
     setState(() {
       _isSendingVerifyOtp = true;
@@ -145,23 +180,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _showServerUrlDialog() async {
-    final sessionController = SessionScope.maybeOf(context);
-    if (sessionController == null) return;
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ServerUrlDialog(sessionController: sessionController),
-    );
-
-    if (saved == true && mounted) {
-      setState(() {
-        _errorMessage = null;
-        _infoNotice = 'Backend server set to ${sessionController.apiBaseUrl}';
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final sessionController = SessionScope.maybeOf(context);
@@ -182,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   key: const Key('configure_server_url_btn'),
-                  onPressed: _isLoading ? null : _showServerUrlDialog,
+                  onPressed: _isLoading ? null : _openServerConfig,
                   icon: Icon(
                     apiConfigured ? Icons.cloud_done_outlined : Icons.settings,
                     size: 18,
@@ -217,16 +235,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               if (!apiConfigured) ...[
                 AuthStatusBanner(
                   isError: false,
                   message:
-                      'Backend URL is not configured yet. Tap "Configure Server URL" above to connect to your OrbitCare backend.',
+                      'Backend server URL is not configured yet. Configure and test your server before signing in.',
                   action: TextButton.icon(
-                    onPressed: _isLoading ? null : _showServerUrlDialog,
+                    onPressed: _isLoading ? null : _openServerConfig,
                     icon: const Icon(Icons.dns_outlined, size: 18),
-                    label: const Text('Set Server URL'),
+                    label: const Text('Configure Server URL'),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -256,15 +274,24 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: _isSendingVerifyOtp
                               ? null
                               : _sendVerificationOtpAndOpen,
-                          icon: const Icon(Icons.verified_user_outlined,
-                              size: 18),
+                          icon: const Icon(
+                            Icons.verified_user_outlined,
+                            size: 18,
+                          ),
                           label: Text(
                             _isSendingVerifyOtp
                                 ? 'Sending OTP...'
                                 : 'Send Verification OTP',
                           ),
                         )
-                      : null,
+                      : (_showConfigAction
+                          ? TextButton.icon(
+                              onPressed:
+                                  _isLoading ? null : _openServerConfig,
+                              icon: const Icon(Icons.settings, size: 18),
+                              label: const Text('Configure Server URL'),
+                            )
+                          : null),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -364,103 +391,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ServerUrlDialog extends StatefulWidget {
-  final SessionController sessionController;
-
-  const _ServerUrlDialog({required this.sessionController});
-
-  @override
-  State<_ServerUrlDialog> createState() => _ServerUrlDialogState();
-}
-
-class _ServerUrlDialogState extends State<_ServerUrlDialog> {
-  late final TextEditingController _urlController;
-  String? _dialogError;
-  bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _urlController =
-        TextEditingController(text: widget.sessionController.apiBaseUrl);
-  }
-
-  @override
-  void dispose() {
-    _urlController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    setState(() {
-      _saving = true;
-      _dialogError = null;
-    });
-    try {
-      await widget.sessionController.updateApiBaseUrl(_urlController.text);
-      if (!mounted) return;
-      Navigator.pop(context, true);
-    } on OrbitCareApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _dialogError = e.message;
-        _saving = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _dialogError = 'Unable to save server URL.';
-        _saving = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      scrollable: true,
-      title: const Text('Backend Server URL'),
-      content: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Enter your OrbitCare backend address (e.g. https://your-api.example.com or http://YOUR-LAN-IP:5000).',
-              style: TextStyle(fontSize: 13, color: AppColors.grey),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('server_url_input'),
-              controller: _urlController,
-              enabled: !_saving,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: 'Server URL',
-                hintText: 'https://api.orbitcare.example',
-                errorText: _dialogError,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          key: const Key('save_server_url_btn'),
-          onPressed: _saving ? null : _save,
-          child: const Text('Save'),
-        ),
-      ],
     );
   }
 }

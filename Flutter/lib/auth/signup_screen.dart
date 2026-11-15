@@ -22,7 +22,19 @@ class _SignupScreenState extends State<SignupScreen> {
       TextEditingController();
 
   bool _isLoading = false;
+  bool _checkedStartup = false;
+  bool _showConfigAction = false;
   String? _errorMessage;
+  String? _infoNotice;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_checkedStartup) {
+      _checkedStartup = true;
+      SessionScope.maybeOf(context)?.ensureConfigLoaded();
+    }
+  }
 
   @override
   void dispose() {
@@ -31,6 +43,18 @@ class _SignupScreenState extends State<SignupScreen> {
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openServerConfig() async {
+    final sessionController = SessionScope.maybeOf(context);
+    final saved = await Navigator.pushNamed(context, AppRoutes.serverConfig);
+    if (saved == true && mounted && sessionController != null) {
+      setState(() {
+        _errorMessage = null;
+        _showConfigAction = false;
+        _infoNotice = 'Backend server set to ${sessionController.apiBaseUrl}';
+      });
+    }
   }
 
   Future<void> _handleSignup() async {
@@ -42,6 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (fullName.isEmpty) {
       setState(() {
         _errorMessage = 'Please enter your full name.';
+        _showConfigAction = false;
       });
       return;
     }
@@ -49,6 +74,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
       setState(() {
         _errorMessage = 'Please enter a valid email address.';
+        _showConfigAction = false;
       });
       return;
     }
@@ -56,6 +82,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (password.length < 8) {
       setState(() {
         _errorMessage = 'Password must be at least 8 characters long.';
+        _showConfigAction = false;
       });
       return;
     }
@@ -63,6 +90,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (password != confirmPassword) {
       setState(() {
         _errorMessage = 'Passwords do not match.';
+        _showConfigAction = false;
       });
       return;
     }
@@ -75,9 +103,23 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    await sessionController.ensureConfigLoaded();
+    if (!mounted) return;
+
+    if (!sessionController.apiClient.isConfigured) {
+      setState(() {
+        _errorMessage =
+            'Backend server URL is not configured yet. Configure and test your server connection before creating an account.';
+        _showConfigAction = true;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _infoNotice = null;
+      _showConfigAction = false;
     });
 
     try {
@@ -96,6 +138,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       setState(() {
         _errorMessage = e.message;
+        _showConfigAction = e.isConfigError || e.isNetworkError;
       });
     } catch (_) {
       if (!mounted) return;
@@ -113,6 +156,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sessionController = SessionScope.maybeOf(context);
+    final apiConfigured = sessionController?.apiClient.isConfigured ?? false;
+    final activeBaseUrl = sessionController?.apiBaseUrl ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -123,9 +170,27 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: const Key('signup_configure_server_url_btn'),
+                  onPressed: _isLoading ? null : _openServerConfig,
+                  icon: Icon(
+                    apiConfigured ? Icons.cloud_done_outlined : Icons.settings,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                  label: Text(
+                    apiConfigured ? 'Server Settings' : 'Configure Server URL',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
               const OrbitLogo(height: 85),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               const Text(
                 'Create Account',
                 style: TextStyle(
@@ -144,9 +209,45 @@ class _SignupScreenState extends State<SignupScreen> {
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              if (!apiConfigured) ...[
+                AuthStatusBanner(
+                  isError: false,
+                  message:
+                      'Backend server URL is not configured yet. Configure and test your server connection before creating an account.',
+                  action: TextButton.icon(
+                    onPressed: _isLoading ? null : _openServerConfig,
+                    icon: const Icon(Icons.dns_outlined, size: 18),
+                    label: const Text('Configure Server URL'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else if (activeBaseUrl.isNotEmpty && _infoNotice == null) ...[
+                Text(
+                  'Server: $activeBaseUrl',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.grey,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (_infoNotice != null) ...[
+                AuthStatusBanner(isError: false, message: _infoNotice!),
+                const SizedBox(height: 16),
+              ],
               if (_errorMessage != null) ...[
-                AuthStatusBanner(isError: true, message: _errorMessage!),
+                AuthStatusBanner(
+                  isError: true,
+                  message: _errorMessage!,
+                  action: _showConfigAction
+                      ? TextButton.icon(
+                          onPressed: _isLoading ? null : _openServerConfig,
+                          icon: const Icon(Icons.settings, size: 18),
+                          label: const Text('Configure Server URL'),
+                        )
+                      : null,
+                ),
                 const SizedBox(height: 16),
               ],
               Container(

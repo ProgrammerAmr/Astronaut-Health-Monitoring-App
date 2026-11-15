@@ -4,28 +4,29 @@ const express = require('express');
 const crypto = require('node:crypto');
 const { getCognitiveStateStatus, analyzeCognitiveState } = require('../src/controllers/cognitiveStateController');
 
-function createPreviewApp() {
+function createPreviewApp({ now = Date.now, idleTimeoutMs = 8 * 60 * 60 * 1000, maxSessionMs = 24 * 60 * 60 * 1000 } = {}) {
   const app = express();
   const sessions = new Map();
   app.use(express.json({ limit: '32kb' }));
   app.get('/api/health', (_req, res) => res.json({ success: true, synthetic_preview: true }));
   app.post('/api/demo/session', (_req, res) => {
-    const now = Date.now();
-    for (const [key, session] of sessions) if (session.expiresAt <= now) sessions.delete(key);
+    const timestamp = now();
+    for (const [key, session] of sessions) if (session.expiresAt <= timestamp) sessions.delete(key);
     if (sessions.size >= 100) return res.status(503).json({ message: 'Preview is busy; please try again later.' });
     const token = crypto.randomBytes(32).toString('hex');
     const measurements = [76, 72, 78, 74, 71].map((heartRate, i) => ({
       _id: crypto.randomUUID(), heartRate, spo2: 98, respiratoryRate: 16, temperature: 36.8,
-      measuredAt: new Date(now - i * 86400000).toISOString(), source: 'synthetic',
+      measuredAt: new Date(timestamp - i * 86400000).toISOString(), source: 'synthetic',
     }));
-    const alerts = [{ _id: crypto.randomUUID(), title: '[SYNTHETIC] Demo reminder', message: 'This is an example alert, not a clinical notification.', severity: 'low', isRead: false, createdAt: new Date().toISOString() }];
-    sessions.set(token, { measurements, alerts, expiresAt: now + 60 * 60 * 1000 });
+    const alerts = [{ _id: crypto.randomUUID(), title: '[SYNTHETIC] Demo reminder', message: 'This is an example alert, not a clinical notification.', severity: 'low', isRead: false, createdAt: new Date(timestamp).toISOString() }];
+    sessions.set(token, { measurements, alerts, expiresAt: timestamp + idleTimeoutMs, maxExpiresAt: timestamp + maxSessionMs });
     res.json({ token, user: { id: 'synthetic-demo', name: 'Synthetic Astronaut', role: 'demo' } });
   });
   app.use('/api', (req, res, next) => {
     const token = (req.get('Authorization') || '').replace(/^Bearer /, '');
     const session = sessions.get(token);
-    if (!session || session.expiresAt <= Date.now()) { sessions.delete(token); return res.status(401).json({ message: 'Preview session expired. Start the demo again.' }); }
+    if (!session || session.expiresAt <= now()) { sessions.delete(token); return res.status(401).json({ message: 'Preview session expired. Start the demo again.' }); }
+    session.expiresAt = Math.min(now() + idleTimeoutMs, session.maxExpiresAt);
     req.demo = session;
     req.demoToken = token;
     req.user = { _id: 'synthetic-demo', role: 'astronaut' };
@@ -47,7 +48,7 @@ function createPreviewApp() {
     const period = req.query.period || 'weekly';
     const days = { daily: 1, weekly: 7, monthly: 30 }[period];
     if (!days) return res.status(400).json({ message: 'Invalid period.' });
-    const entries = req.demo.measurements.filter(m => Date.parse(m.measuredAt) >= Date.now() - days * 86400000);
+    const entries = req.demo.measurements.filter(m => Date.parse(m.measuredAt) >= now() - days * 86400000);
     const avg = key => entries.length ? entries.reduce((sum, m) => sum + m[key], 0) / entries.length : null;
     return res.json({ data: { period, summary: { records: entries.length, avgHeartRate: avg('heartRate'), avgSpo2: avg('spo2'), avgTemperature: avg('temperature'), totalSleepMinutes: 0, totalSteps: 0 } } });
   });

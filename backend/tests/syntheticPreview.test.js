@@ -24,3 +24,21 @@ test('preview is isolated, synthetic and rejects real account and measurement wr
     assert.equal((await fetch(base + '/users/me', { headers })).status, 401);
   } finally { await new Promise(resolve => server.close(resolve)); }
 });
+
+test('active preview sessions slide until the absolute limit and logout remains final', async () => {
+  let clock = 1_000_000;
+  const app = createPreviewApp({ now: () => clock, idleTimeoutMs: 1000, maxSessionMs: 2500 });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  try {
+    const { token } = await fetch(base + '/demo/session', { method: 'POST' }).then(r => r.json());
+    const headers = { Authorization: `Bearer ${token}` };
+    clock += 900;
+    assert.equal((await fetch(base + '/users/me', {headers})).status, 200);
+    clock += 900;
+    assert.equal((await fetch(base + '/users/me', {headers})).status, 200);
+    clock += 700;
+    assert.equal((await fetch(base + '/users/me', {headers})).status, 401);
+  } finally { await new Promise(resolve => server.close(resolve)); }
+});

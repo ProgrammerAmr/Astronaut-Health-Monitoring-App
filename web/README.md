@@ -17,6 +17,7 @@ The AI card uses `/api/cognitive-state/status` and `/api/cognitive-state/analyze
 
 ```sh
 npm test
+npm run test:ui
 npm run build
 ```
 
@@ -45,7 +46,7 @@ The AI service is separate: start it and set `CSM_AI_SERVICE_URL` to enable the 
 
 ## Explicit synthetic preview (no MongoDB)
 
-This is **not** the real backend, registration, email, or a persistent database. It is an opt-in, isolated in-memory demo API using fictional data, separate from `backend/server.js`. The browser offers a password-free demo entry and clearly labels the data. Real signup and adding measurements are disabled; use no real personal or health data. Each temporary session is isolated, expires after one hour, and is deleted on sign-out. Data also disappears on server restart. The CSM endpoints still use the real Node CSM proxy/controller and a running Python service; the service safely abstains without a validated model.
+This is **not** the real backend, registration, email, or a persistent database. It is an opt-in, isolated in-memory demo API using fictional data, separate from `backend/server.js`. The browser offers a password-free demo entry and clearly labels the data. Real signup and adding measurements are disabled; use no real personal or health data. Each temporary session is isolated, expires after eight hours of inactivity or 24 hours maximum, and is deleted on sign-out. If a session expires or the demo API restarts, the preview automatically opens a new synthetic session and shows a notice that demo data was reset. Data also disappears on server restart. The CSM endpoints still use the real Node CSM proxy/controller and a running Python service; the service safely abstains without a validated model.
 
 For local development only, start Python as above, then in separate terminals:
 

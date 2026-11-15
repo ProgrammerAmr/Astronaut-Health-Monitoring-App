@@ -1,11 +1,11 @@
 export class ApiError extends Error {
   constructor(message, status) { super(message); this.status = status; }
 }
-export async function request(path, { token, method = 'GET', body, fetcher = fetch } = {}) {
+export async function request(path, { token, method = 'GET', body, fetcher = fetch, preview = import.meta.env?.VITE_ORBITCARE_SYNTHETIC_DEMO === '1' } = {}) {
   let response;
   try {
     response = await fetcher(`/api${path}`, {
-      method, headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      method, headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(token ? (preview ? { 'X-OrbitCare-Demo-Token': token } : { Authorization: `Bearer ${token}` }) : {}) },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
   } catch {

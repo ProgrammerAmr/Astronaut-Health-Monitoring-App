@@ -23,7 +23,7 @@ function createPreviewApp({ now = Date.now, idleTimeoutMs = 8 * 60 * 60 * 1000, 
     res.json({ token, user: { id: 'synthetic-demo', name: 'Synthetic Astronaut', role: 'demo' } });
   });
   app.use('/api', (req, res, next) => {
-    const token = (req.get('Authorization') || '').replace(/^Bearer /, '');
+    const token = req.get('X-OrbitCare-Demo-Token') || (req.get('Authorization') || '').replace(/^Bearer /, '');
     const session = sessions.get(token);
     if (!session || session.expiresAt <= now()) { sessions.delete(token); return res.status(401).json({ message: 'Preview session expired. Start the demo again.' }); }
     session.expiresAt = Math.min(now() + idleTimeoutMs, session.maxExpiresAt);

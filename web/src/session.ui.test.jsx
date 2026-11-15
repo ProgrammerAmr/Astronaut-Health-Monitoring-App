@@ -12,12 +12,12 @@ const response = (status, json) => ({ ok: status >= 200 && status < 300, status,
 beforeEach(async () => {
   vi.resetModules();
   vi.stubEnv('VITE_ORBITCARE_SYNTHETIC_DEMO', '1');
-  sessionStorage.clear();
+  sessionStorage.clear(); localStorage.clear();
   requests = [];
   validTokens = new Set();
   sessionCount = 0;
   vi.stubGlobal('fetch', vi.fn(async (url, options) => {
-    const token = options.headers.Authorization?.replace('Bearer ', '');
+    const token = options.headers['X-OrbitCare-Demo-Token'] || options.headers.Authorization?.replace('Bearer ', '');
     requests.push({url, token});
     if (url === '/api/demo/session') { const token = `token-${++sessionCount}`; validTokens.add(token); return response(200, { token, user: { name:'Synthetic Astronaut' } }); }
     if (!validTokens.has(token)) return response(401, { message:'Preview session expired' });
@@ -38,7 +38,7 @@ test('keeps the demo session across remounts and exits only on explicit sign out
   fireEvent.click(screen.getByText('Open synthetic demo'));
   await screen.findByText('SYNTHETIC PREVIEW');
   await waitFor(() => expect(requests.some(r => r.url === '/api/users/me')).toBe(true));
-  expect(sessionStorage.getItem('orbitcare_preview_token')).toBe('token-1');
+  expect(localStorage.getItem('orbitcare_preview_token')).toBe('token-1');
   view.unmount();
   render(<App/>);
   await screen.findByText('SYNTHETIC PREVIEW');
@@ -46,14 +46,14 @@ test('keeps the demo session across remounts and exits only on explicit sign out
   expect(sessionCount).toBe(1);
   fireEvent.click(screen.getByText('Sign out'));
   await screen.findByText('Open synthetic demo');
-  expect(sessionStorage.getItem('orbitcare_preview_token')).toBeNull();
+  expect(localStorage.getItem('orbitcare_preview_token')).toBeNull();
 });
 
 test('recovers an invalidated preview session without bouncing out', async () => {
-  sessionStorage.setItem('orbitcare_preview_token', 'old-token');
+  localStorage.setItem('orbitcare_preview_token', 'old-token');
   render(<App/>);
   await screen.findByText(/temporary demo session was restarted/);
-  await waitFor(() => expect(sessionStorage.getItem('orbitcare_preview_token')).toBe('token-1'));
+  await waitFor(() => expect(localStorage.getItem('orbitcare_preview_token')).toBe('token-1'));
   expect(screen.getByText('SYNTHETIC PREVIEW')).toBeTruthy();
   expect(sessionCount).toBe(1);
 });
@@ -63,20 +63,38 @@ test('stale in-flight requests cannot undo a new session after sign out', async 
   let releaseOldProfile;
   const oldProfile = new Promise(resolve => { releaseOldProfile = resolve; });
   vi.stubGlobal('fetch', vi.fn((url, options) => {
-    if (url === '/api/users/me' && options.headers.Authorization === 'Bearer token-1') return oldProfile;
+    if (url === '/api/users/me' && options.headers['X-OrbitCare-Demo-Token'] === 'token-1') return oldProfile;
     return originalFetch(url, options);
   }));
   render(<App/>);
   fireEvent.click(screen.getByText('Open synthetic demo'));
   await screen.findByText('SYNTHETIC PREVIEW');
-  await waitFor(() => expect(fetch.mock.calls.some(([url, opts]) => url === '/api/users/me' && opts.headers.Authorization === 'Bearer token-1')).toBe(true));
+  await waitFor(() => expect(fetch.mock.calls.some(([url, opts]) => url === '/api/users/me' && opts.headers['X-OrbitCare-Demo-Token'] === 'token-1')).toBe(true));
   fireEvent.click(screen.getByText('Sign out'));
   await screen.findByText('Open synthetic demo');
   fireEvent.click(screen.getByText('Open synthetic demo'));
   await screen.findByText('SYNTHETIC PREVIEW');
-  await waitFor(() => expect(sessionStorage.getItem('orbitcare_preview_token')).toBe('token-2'));
+  await waitFor(() => expect(localStorage.getItem('orbitcare_preview_token')).toBe('token-2'));
   releaseOldProfile(response(401, {message:'Old session expired'}));
   await waitFor(() => expect(requests.some(r => r.url === '/api/users/me' && r.token === 'token-2')).toBe(true));
-  expect(sessionStorage.getItem('orbitcare_preview_token')).toBe('token-2');
+  expect(localStorage.getItem('orbitcare_preview_token')).toBe('token-2');
+  expect(screen.getByText('SYNTHETIC PREVIEW')).toBeTruthy();
+});
+
+test('a failed preview recovery stays on the dashboard and allows reconnect', async () => {
+  localStorage.setItem('orbitcare_preview_token', 'expired');
+  const normalFetch = globalThis.fetch;
+  let allowRecovery = false;
+  vi.stubGlobal('fetch', vi.fn((url, options) => {
+    if (url === '/api/demo/session' && !allowRecovery) return Promise.resolve(response(503, {message:'Preview temporarily unavailable'}));
+    return normalFetch(url, options);
+  }));
+  render(<App/>);
+  await screen.findByText(/Could not reconnect the preview/);
+  expect(screen.getByText('SYNTHETIC PREVIEW')).toBeTruthy();
+  expect(screen.queryByText('Open synthetic demo')).toBeNull();
+  allowRecovery = true;
+  fireEvent.click(screen.getByText('Reconnect demo'));
+  await waitFor(() => expect(localStorage.getItem('orbitcare_preview_token')).toBe('token-1'));
   expect(screen.getByText('SYNTHETIC PREVIEW')).toBeTruthy();
 });

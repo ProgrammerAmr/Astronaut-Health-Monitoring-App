@@ -11,12 +11,16 @@ const date = v => v && !Number.isNaN(new Date(v).getTime()) ? new Date(v).toLoca
 const errorText = e => e?.message || 'Something went wrong. Please try again.';
 
 export default function App() {
-  const [token, setToken] = useState(() => sessionStorage.getItem(tokenKey) || '');
+  // Demo contains fictional data only; localStorage survives preview iframe remounts.
+  // Real account tokens remain in sessionStorage.
+  const storage = syntheticPreview ? localStorage : sessionStorage;
+  const [token, setToken] = useState(() => storage.getItem(tokenKey) || '');
   const currentToken = useRef(token);
   const loadSequence = useRef(0);
   const recoveringDemo = useRef(false);
   const recoveryRequest = useRef(null);
   const [demoNotice, setDemoNotice] = useState('');
+  const [demoReconnect, setDemoReconnect] = useState(false);
   const [user, setUser] = useState(null);
   const [page, setPage] = useState('Overview');
   const [menu, setMenu] = useState(false);
@@ -39,7 +43,7 @@ export default function App() {
 
   const setSessionToken = next => {
     currentToken.current = next;
-    if (next) sessionStorage.setItem(tokenKey, next); else sessionStorage.removeItem(tokenKey);
+    if (next) storage.setItem(tokenKey, next); else storage.removeItem(tokenKey);
     setToken(next);
   };
   const logout = async () => {
@@ -47,7 +51,7 @@ export default function App() {
     // Invalidate pending requests before waiting for logout over the network.
     ++loadSequence.current;
     recoveryRequest.current = null; recoveringDemo.current = false;
-    setSessionToken(''); setUser(null); setOverview(null); setMeasurements([]); setAlerts([]); setReport(null); setCsm(null); setAnalysis(null); setErrors({}); setPage('Overview'); setDemoNotice('');
+    setSessionToken(''); setUser(null); setOverview(null); setMeasurements([]); setAlerts([]); setReport(null); setCsm(null); setAnalysis(null); setErrors({}); setPage('Overview'); setDemoNotice(''); setDemoReconnect(false);
     if (previousToken) { try { await request('/auth/logout', {token:previousToken, method:'POST'}); } catch { /* local logout still succeeds */ } }
   };
   const load = async () => {
@@ -79,15 +83,17 @@ export default function App() {
           }
           const response = await recoveryRequest.current;
           if (!isCurrent()) return;
-          setDemoNotice('The temporary demo session was restarted; fictional data was reset.');
+          setDemoNotice('The temporary demo session was restarted; fictional data was reset.'); setDemoReconnect(false);
           setSessionToken(response.token); setUser(response.user); setLoading(false);
           return;
         } catch (error) {
           if (!isCurrent()) return;
-          setAuthError(`Could not restart the preview: ${errorText(error)}`);
+          setDemoNotice(`Could not reconnect the preview: ${errorText(error)}`); setDemoReconnect(true); setLoading(false); return;
         }
+      } else if (syntheticPreview) {
+        setDemoNotice('The preview session could not be restored. Try reconnecting.'); setDemoReconnect(true); setLoading(false); return;
       } else {
-        setAuthError(syntheticPreview ? 'The demo session expired. Please open the demo again.' : 'Your session has expired. Please sign in again.');
+        setAuthError('Your session has expired. Please sign in again.');
       }
       setSessionToken(''); setUser(null); setLoading(false);
       return;
@@ -116,9 +122,9 @@ export default function App() {
     finally { setBusy(false); }
   };
   const startDemo = async () => {
-    setBusy(true); setAuthError(''); recoveringDemo.current = false; setDemoNotice('');
+    setBusy(true); setAuthError(''); recoveringDemo.current = false; setDemoNotice(''); setDemoReconnect(false);
     try { const response = await request('/demo/session', {method:'POST'}); setSessionToken(response.token); setUser(response.user); }
-    catch (err) { setAuthError(errorText(err)); } finally { setBusy(false); }
+    catch (err) { if (currentToken.current) { setDemoNotice(`Could not reconnect the preview: ${errorText(err)}`); setDemoReconnect(true); } else setAuthError(errorText(err)); } finally { setBusy(false); }
   };
   const saveMeasurement = async e => {
     e.preventDefault(); setFormError(''); const raw = Object.fromEntries(new FormData(e.currentTarget)); const body = {source:'manual'};
@@ -142,7 +148,7 @@ export default function App() {
     <div className="auth-links">{authMode === 'login' ? <><button onClick={() => {setAuthMode('forgot');setAuthError('');setAuthNotice('');}}>Forgot password?</button><span>New here? <button onClick={() => {setAuthMode('register');setAuthError('');setAuthNotice('');}}>Create account</button></span></> : <button onClick={() => {setAuthMode('login');setAuthError('');setAuthNotice('');}}>← Back to sign in</button>}</div>{authMode === 'login' && <div className="verify-link">Already registered? <button onClick={() => {setAuthMode('verify');setAuthError('');setAuthNotice('');}}>Verify your email</button></div>}<p className="auth-footer">Your health data, thoughtfully connected.<br/>Experimental prototype. Not medical advice.</p></div></div></div>;
   return <div className="app"><aside className={`sidebar ${menu ? 'open' : ''}`}><Brand/><div className="side-label">WORKSPACE</div><nav>{nav.map(n => {const Icon=icons[n]; return <button key={n} className={page === n ? 'active' : ''} onClick={() => {setPage(n);setMenu(false);}}><Icon size={19}/>{n}{n === 'Alerts' && overview?.unreadAlerts > 0 && <span className="nav-count">{overview.unreadAlerts}</span>}</button>})}</nav><div className="sidebar-bottom"><div className="mission-card"><span className="mission-icon"><Sparkles size={17}/></span><div><strong>Made for the mission</strong><p>Supporting health,<br/>wherever you are.</p></div></div><button className="logout" onClick={logout}><LogOut size={18}/> Sign out</button></div></aside>
     <main className="main"><header className="topbar"><button className="icon-btn mobile-menu" onClick={() => setMenu(!menu)} aria-label="Open menu"><Menu/></button><div className="breadcrumbs">Workspace <span>/</span> <strong>{page}</strong></div><div className="top-actions"><button className="icon-btn" onClick={load} aria-label="Refresh data"><RefreshCw size={18} className={loading ? 'spin' : ''}/></button><button className="icon-btn notification" onClick={() => setPage('Alerts')} aria-label="View alerts"><Bell size={19}/>{overview?.unreadAlerts > 0 && <i/>}</button><div className="top-divider"/><div className="avatar">{(user?.name || 'A').slice(0,1).toUpperCase()}</div><div className="user-label"><strong>{user?.name || 'Astronaut'}</strong><span>{user?.role || 'Astronaut'}</span></div><ChevronDown size={15} className="muted"/></div></header>
-    <div className="content">{demoNotice && <div className="notice" role="status">{demoNotice}</div>}{syntheticPreview && <div className="preview-banner" role="status"><strong>SYNTHETIC PREVIEW</strong> · Fictional data only. Temporary demo session; real accounts and saving measurements are disabled.</div>}<div className="page-heading"><div><div className="eyebrow"><span className="dot"/> MISSION HEALTH / {page.toUpperCase()}</div><h1>{page === 'Overview' ? `Welcome back${user?.name ? `, ${user.name.split(' ')[0]}` : ''}.` : page}</h1><p>{({Overview:'Here’s a look at your health, all in one place.',Measurements:'Review and log your health measurements.',Alerts:'Stay up to date with your mission notifications.',Reports:'A closer look at your health over time.'})[page]}</p></div><div className="heading-actions"><button className="button secondary" onClick={load}><RefreshCw size={15}/> Refresh</button>{!syntheticPreview && <button className="button primary" onClick={() => {setFormError('');setModal(true);}}><Plus size={17}/> Log vitals</button>}</div></div>
+    <div className="content">{demoNotice && <div className="notice" role="status">{demoNotice} {demoReconnect && <button className="text-button" onClick={startDemo} disabled={busy}>Reconnect demo</button>}</div>}{syntheticPreview && <div className="preview-banner" role="status"><strong>SYNTHETIC PREVIEW</strong> · Fictional data only. Temporary demo session; real accounts and saving measurements are disabled.</div>}<div className="page-heading"><div><div className="eyebrow"><span className="dot"/> MISSION HEALTH / {page.toUpperCase()}</div><h1>{page === 'Overview' ? `Welcome back${user?.name ? `, ${user.name.split(' ')[0]}` : ''}.` : page}</h1><p>{({Overview:'Here’s a look at your health, all in one place.',Measurements:'Review and log your health measurements.',Alerts:'Stay up to date with your mission notifications.',Reports:'A closer look at your health over time.'})[page]}</p></div><div className="heading-actions"><button className="button secondary" onClick={load}><RefreshCw size={15}/> Refresh</button>{!syntheticPreview && <button className="button primary" onClick={() => {setFormError('');setModal(true);}}><Plus size={17}/> Log vitals</button>}</div></div>
     <div className="safety-banner"><ShieldCheck size={17}/><span><strong>Research prototype.</strong> Not a medical, diagnostic, or flight-certified system.</span></div>
     {errors.profile && <div className="error">Profile: {errors.profile}</div>}
     {page === 'Overview' && <><div className="section-heading"><div><h2>Health overview</h2><p>Your latest recorded measurements</p></div><span className="updated"><Clock3 size={14}/> Last recorded {date(latest?.measuredAt)}</span></div>{errors.overview && <div className="error">Overview: {errors.overview}</div>}<div className="stat-grid"><Stat icon={Heart} label="Heart rate" value={fmt(latest?.heartRate)} unit="bpm" tone="coral"/><Stat icon={Wind} label="Blood oxygen" value={fmt(latest?.spo2)} unit="%" tone="blue"/><Stat icon={Activity} label="Respiratory rate" value={fmt(latest?.respiratoryRate)} unit="br/min" tone="purple"/><Stat icon={Thermometer} label="Temperature" value={fmt(latest?.temperature,1)} unit="°C" tone="orange"/></div><div className="dashboard-grid"><div className="left-col"><div className="card chart-card"><div className="card-head"><div><div className="eyebrow">YOUR VITALS</div><h3>Heart rate history</h3><p>Recent recorded measurements</p></div><span className="pill"><span className="dot"/> Recorded data</span></div>{errors.measurements ? <div className="error">{errors.measurements}</div> : <Chart measurements={measurements}/>}</div><div className="card records-card"><div className="card-head"><div><div className="eyebrow">YOUR ACTIVITY</div><h3>Recent measurements</h3><p>A snapshot of your latest entries</p></div><button className="text-button" onClick={() => setPage('Measurements')}>View all <ArrowRight size={15}/></button></div><Records data={measurements.slice(0,4)} error={errors.measurements}/></div></div><div className="right-col"><Csm csm={csm} error={errors.csm} analysis={analysis} analyze={analyze} busy={busy}/><div className="card alert-card"><div className="card-head"><div><div className="eyebrow">STAY INFORMED</div><h3>Recent alerts</h3></div><button className="text-button" onClick={() => setPage('Alerts')}>View all <ArrowRight size={14}/></button></div><AlertList alerts={alerts.slice(0,3)} error={errors.alerts} acknowledge={acknowledge}/></div><div className="tip-card"><span>✦</span><div><strong>A little reminder</strong><p>Consistent check-ins help build a clearer picture over time.</p></div></div></div></div></>}

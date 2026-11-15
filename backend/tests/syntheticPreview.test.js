@@ -42,3 +42,14 @@ test('active preview sessions slide until the absolute limit and logout remains 
     assert.equal((await fetch(base + '/users/me', {headers})).status, 401);
   } finally { await new Promise(resolve => server.close(resolve)); }
 });
+
+test('the preview accepts its dedicated demo token header', async () => {
+  const server = createPreviewApp().listen(0, '127.0.0.1');
+  await new Promise(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  try {
+    const {token} = await fetch(base + '/demo/session', {method:'POST'}).then(r => r.json());
+    const result = await fetch(base + '/users/me', {headers:{'X-OrbitCare-Demo-Token':token}});
+    assert.equal(result.status, 200);
+  } finally { await new Promise(resolve => server.close(resolve)); }
+});

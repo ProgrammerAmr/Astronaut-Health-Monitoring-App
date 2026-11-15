@@ -24,3 +24,9 @@ test('explains non-JSON proxy errors and SPA fallback separately', async () => {
   await assert.rejects(request('/health', { fetcher: async () => ({ ok: false, status: 500, json: invalid }) }), e => e.status === 500 && e.message.includes('HTTP 500'));
   await assert.rejects(request('/health', { fetcher: async () => ({ ok: true, status: 200, json: invalid }) }), e => e.message.includes('not the frontend'));
 });
+test('preview uses an isolated demo header instead of real auth header', async () => {
+  let captured;
+  await request('/users/me', { preview:true, token:'demo-token', fetcher: async (_url, options) => { captured = options; return {ok:true, json:async () => ({data:{}})}; } });
+  assert.equal(captured.headers['X-OrbitCare-Demo-Token'], 'demo-token');
+  assert.equal(captured.headers.Authorization, undefined);
+});

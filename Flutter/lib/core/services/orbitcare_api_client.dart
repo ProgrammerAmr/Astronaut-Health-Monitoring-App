@@ -7,22 +7,32 @@ import '../config/api_config.dart';
 import '../models/orbitcare_models.dart';
 
 class OrbitCareApiClient {
-  final String baseUrl;
   final Duration timeout;
   final CsmHttpTransport _transport;
+
+  /// Explicitly requested base URL. `null` means "resolve dynamically".
+  final String? _baseUrlOverride;
 
   OrbitCareApiClient({
     String? baseUrl,
     this.timeout = const Duration(seconds: 10),
     CsmHttpTransport? transport,
-  })  : baseUrl = normalizeApiBaseUrl(baseUrl ?? kOrbitCareApiBaseUrl),
+  })  : _baseUrlOverride = baseUrl == null ? null : normalizeApiBaseUrl(baseUrl),
         _transport = transport ?? createDefaultCsmTransport();
+
+  /// Effective backend URL.
+  ///
+  /// Re-resolved on every request through [resolveApiBaseUrl] so a URL saved
+  /// from the in-app "Backend Connection" screen (or a `--dart-define` flag)
+  /// is picked up immediately, without rebuilding or restarting the app.
+  String get baseUrl => _baseUrlOverride ?? resolveApiBaseUrl();
 
   bool get isConfigured => isValidApiBaseUrl(baseUrl);
 
   CognitiveStateApiClient createCognitiveStateClient() {
     return CognitiveStateApiClient(
-      baseUrl: baseUrl,
+      // Passing null keeps the CSM client dynamically resolved as well.
+      baseUrl: _baseUrlOverride,
       timeout: const Duration(seconds: 6),
       transport: _transport,
     );
@@ -59,7 +69,9 @@ class OrbitCareApiClient {
       throw const OrbitCareApiException(
         code: 'API_BASE_URL_UNCONFIGURED',
         message:
-            'OrbitCare backend URL is not configured. Launch with --dart-define=ORBITCARE_API_BASE_URL=<backend-url>.',
+            'OrbitCare backend URL is not configured. Open Settings -> Backend '
+            'Connection in the app, or launch with '
+            '--dart-define=ORBITCARE_API_BASE_URL=<backend-url>.',
       );
     }
 
@@ -100,18 +112,43 @@ class OrbitCareApiClient {
     } on OrbitCareApiException {
       rethrow;
     } on TimeoutException {
-      throw const OrbitCareApiException(
+      throw OrbitCareApiException(
         code: 'TIMEOUT',
         message:
-            'Request timed out while contacting the OrbitCare backend. Check your connection and try again.',
+            'Request to $baseUrl timed out. The backend may be blocked by a '
+            'firewall or on a different network. Check Settings -> Backend Connection.',
       );
-    } catch (_) {
-      throw const OrbitCareApiException(
+    } catch (error) {
+      throw OrbitCareApiException(
         code: 'NETWORK_ERROR',
-        message:
-            'Unable to reach the OrbitCare backend server. Verify the server is running and reachable.',
+        message: _networkErrorMessage(error),
       );
     }
+  }
+
+  /// Turns low level socket/browser failures into a message that tells the
+  /// developer exactly what to check next.
+  String _networkErrorMessage(Object error) {
+    final text = error.toString().toLowerCase();
+    final target = baseUrl.isEmpty ? 'the backend' : baseUrl;
+
+    if (text.contains('cleartext') || text.contains('network security policy')) {
+      return 'Android blocked the plain HTTP connection to $target. Rebuild the '
+          'app with the latest AndroidManifest.xml (usesCleartextTraffic="true").';
+    }
+    if (text.contains('failed host lookup') ||
+        text.contains('name or service not known') ||
+        text.contains('nodename nor servname')) {
+      return 'Could not resolve the host in $target. Fix the backend URL in '
+          'Settings -> Backend Connection.';
+    }
+    if (text.contains('certificate') || text.contains('handshake')) {
+      return 'Secure connection to $target failed. For local development use '
+          'http:// instead of https://.';
+    }
+    return 'Unable to reach the OrbitCare backend at $target. Start it with '
+        '"cd backend && npm run dev", then verify the address in '
+        'Settings -> Backend Connection.';
   }
 
   Map<String, dynamic>? _tryDecodeMap(String body) {
@@ -262,7 +299,23 @@ class OrbitCareApiClient {
         message: 'Unexpected profile response from backend.',
       );
     }
-    return AuthUser.fromJson(Map<String, dynamic>.from(data));
+
+    // GET /api/users/me returns `{ "data": { "user": { ... } } }`.
+    // Accept the flat shape too so both documented variants keep working
+    // (previously the wrapper was parsed as the profile, which restored a
+    // session with an empty id/email and the name "Astronaut").
+    final profile = data['user'] is Map
+        ? Map<String, dynamic>.from(data['user'] as Map)
+        : Map<String, dynamic>.from(data);
+
+    final user = AuthUser.fromJson(profile);
+    if (user.id.isEmpty) {
+      throw const OrbitCareApiException(
+        code: 'INVALID_RESPONSE',
+        message: 'Backend returned a profile without a user id.',
+      );
+    }
+    return user;
   }
 
   // -------------------- HEALTH DASHBOARD & DATA --------------------

@@ -1,0 +1,7 @@
+# Windows helper scripts must keep CRLF line endings to run in cmd.exe
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Shell scripts must keep LF line endings
+*.sh text eol=lf

@@ -161,7 +161,7 @@ jobs:
             echo "<details><summary>flutter doctor -v</summary>"
             echo ""
             echo '```'
-            cd Flutter && flutter doctor -v 2>&1 | tail -n 60 || true
+            flutter doctor -v 2>&1 | tail -n 60 || true
             echo '```'
             echo "</details>"
           } > /tmp/failure-report.md

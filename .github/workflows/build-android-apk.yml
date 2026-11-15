@@ -402,11 +402,12 @@ jobs:
           EOF
           )
 
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" --clobber
-            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --title "OrbitCare Demo v${VERSION_NAME} Signed Android APK" --notes "$NOTES" --prerelease
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "OrbitCare Demo v${VERSION_NAME} Signed Android APK" --notes "$NOTES" --prerelease
           else
             gh release create "$RELEASE_TAG" "$APK_PATH" "$SHA_PATH" \
+              --repo "$GITHUB_REPOSITORY" \
               --target "$GITHUB_SHA" \
               --title "OrbitCare Demo v${VERSION_NAME} Signed Android APK" \
               --notes "$NOTES" \

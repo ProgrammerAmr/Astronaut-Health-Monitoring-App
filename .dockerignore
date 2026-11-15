@@ -1,0 +1,10 @@
+.git
+**/node_modules
+**/.env
+**/.venv
+**/__pycache__
+**/.pytest_cache
+web/dist
+AI_training/chroma_db
+AI_training/csm_artifacts
+AI_training/csm/tests

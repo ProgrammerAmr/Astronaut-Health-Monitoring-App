@@ -24,12 +24,23 @@ app.use("/api/alerts", require("./src/routes/alertRoutes"));
 app.use("/api/reports", require("./src/routes/reportRoutes"));
 app.use("/api/cognitive-state", require("./src/routes/cognitiveStateRoutes"));
 
-app.use((req, res) => {
+// Keep API misses as JSON instead of serving the SPA's HTML to API clients.
+app.use("/api", (req, res) => {
   res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`
   });
 });
+
+// Opt-in static serving for the single-origin hosted web deployment.
+if (process.env.WEB_DIST_DIR) {
+  const path = require("node:path");
+  const webDir = path.resolve(process.env.WEB_DIST_DIR);
+  app.use(express.static(webDir));
+  app.get("/{*path}", (req, res) => res.sendFile(path.join(webDir, "index.html")));
+}
+
+app.use((req, res) => res.status(404).json({ success: false, message: "Route not found" }));
 
 app.use((err, req, res, next) => {
   console.error(err);

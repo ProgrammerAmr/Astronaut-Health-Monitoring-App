@@ -154,3 +154,7 @@ npm run dev
 ```
 
 Open the URL printed by Vite. The development proxy sends same-origin `/api` requests to the backend; set `ORBITCARE_BACKEND_URL` for a different backend address. See the web README for deployment, authentication, AI limitations, and troubleshooting. This branch is based on `test` at `b4ad28b`, not the later connectivity changes merged from the linked branch into `main`.
+
+### Online demo deployment
+
+A single-origin Docker/Render deployment configuration is available in [`deploy/README.md`](deploy/README.md). It requires an independently provisioned MongoDB database and SMTP service, and a hosting account. The Python CSM service remains private inside the container. This is a research demo, not a production or clinical deployment.

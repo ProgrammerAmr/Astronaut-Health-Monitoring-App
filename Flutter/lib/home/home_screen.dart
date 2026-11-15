@@ -532,11 +532,14 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'OrbitCare',
-              style: TextStyle(
-                color: AppColors.navy,
-                fontWeight: FontWeight.bold,
+            const Flexible(
+              child: Text(
+                'OrbitCare',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppColors.navy,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             if (isDemoMode) ...[
@@ -1324,6 +1327,9 @@ class _VitalsTrendCard extends StatelessWidget {
                       children: [
                         Text(
                           hr != null ? '${hr.round()}' : '--',
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.clip,
                           style: const TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w700,

@@ -139,7 +139,7 @@ jobs:
           test_status=$?
           echo "$test_out"
           if [ $test_status -ne 0 ]; then
-            echo "$test_out" | grep -E "\[E\]|The following|Actual:|Expected:|Exception:|Some tests failed" | head -n 10 | while IFS= read -r line; do
+            echo "$test_out" | grep -A 3 -E "\[E\]|The following|Actual:|Expected:|Exception:|Some tests failed" | head -n 30 | while IFS= read -r line; do
               echo "::error::$line"
             done
             exit $test_status

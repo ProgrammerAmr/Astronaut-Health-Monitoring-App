@@ -4,6 +4,7 @@ import '../cognitive_state/models/cognitive_state_models.dart';
 import '../cognitive_state/services/cognitive_state_api_client.dart';
 import '../cognitive_state/widgets/cognitive_state_research_card.dart';
 import '../constants/app_colors.dart';
+import '../core/config/backend_config.dart';
 import '../core/models/orbitcare_models.dart';
 import '../core/services/orbitcare_api_client.dart';
 import '../core/state/session_controller.dart';
@@ -369,6 +370,15 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
+  Future<void> _openConnectionSettings() async {
+    final urlBefore = BackendConfig.instance.effectiveBaseUrl;
+    await Navigator.pushNamed(context, AppRoutes.connectionSettings);
+    if (!mounted) return;
+    if (BackendConfig.instance.effectiveBaseUrl != urlBefore) {
+      await _loadAllHealthData();
+    }
+  }
+
   void _showAlertDetails(HealthAlert alert) {
     final isDemo = _sessionController?.isDemoMode ?? false;
     showModalBottomSheet<void>(
@@ -553,12 +563,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            key: const Key('connection_settings_button'),
-            tooltip: 'Backend Connection',
-            onPressed: _openConnectionSettings,
-            icon: const Icon(Icons.settings_ethernet, color: AppColors.navy),
-          ),
+          if (!isDemoMode)
+            IconButton(
+              key: const Key('connection_settings_button'),
+              tooltip: 'Backend Connection',
+              onPressed: _openConnectionSettings,
+              icon: const Icon(Icons.settings_ethernet, color: AppColors.navy),
+            ),
           if (_authToken != null && _authToken!.isNotEmpty)
             IconButton(
               tooltip: 'Refresh Data',

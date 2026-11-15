@@ -3,6 +3,7 @@
 const express = require('express');
 const crypto = require('node:crypto');
 const { getCognitiveStateStatus, analyzeCognitiveState } = require('../src/controllers/cognitiveStateController');
+const { validateMeasurementPayload } = require('../src/controllers/measurementController');
 
 function createPreviewApp({ now = Date.now, idleTimeoutMs = 8 * 60 * 60 * 1000, maxSessionMs = 24 * 60 * 60 * 1000 } = {}) {
   const app = express();
@@ -36,8 +37,26 @@ function createPreviewApp({ now = Date.now, idleTimeoutMs = 8 * 60 * 60 * 1000, 
   app.get('/api/users/me', (_req, res) => res.json({ data: { user: { id: 'synthetic-demo', name: 'Synthetic Astronaut', role: 'demo' } } }));
   app.get('/api/dashboard/overview', (req, res) => res.json({ data: { totalMeasurements: req.demo.measurements.length, unreadAlerts: req.demo.alerts.filter(a => !a.isRead).length, latestMeasurement: req.demo.measurements[0] || null } }));
   app.get('/api/measurements', (req, res) => res.json({ data: req.demo.measurements.slice(0, 100) }));
-  // Preview only allows the fixed sample entries, so no personal health data can be entered.
-  app.post('/api/measurements', (_req, res) => res.status(403).json({ message: 'Adding measurements is disabled in the synthetic preview.' }));
+  // Only explicitly acknowledged synthetic numerical inputs are held in memory.
+  app.post('/api/measurements', (req, res) => {
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body) || body.syntheticConfirmed !== true) {
+      return res.status(400).json({message: 'Confirm that this is fictional demo data.'});
+    }
+    const numeric = ['heartRate', 'respiratoryRate', 'spo2', 'temperature', 'bloodSugar'];
+    const allowed = new Set([...numeric, 'bloodPressure', 'source', 'syntheticConfirmed']);
+    if (Object.keys(body).some(key => !allowed.has(key))) return res.status(400).json({message:'Unsupported field in preview.'});
+    if (body.bloodPressure !== undefined && (!body.bloodPressure || typeof body.bloodPressure !== 'object' || Array.isArray(body.bloodPressure) || Object.keys(body.bloodPressure).length === 0 || Object.keys(body.bloodPressure).some(k => !['systolic', 'diastolic'].includes(k)))) return res.status(400).json({message:'Invalid blood pressure fields.'});
+    const data = {};
+    for (const key of [...numeric, 'bloodPressure']) if (body[key] !== undefined) data[key] = body[key];
+    if (!Object.keys(data).length) return res.status(400).json({message:'Enter at least one measurement.'});
+    const error = validateMeasurementPayload(data);
+    if (error) return res.status(400).json({message:error});
+    if (req.demo.measurements.length >= 100) return res.status(400).json({message:'Preview limit reached (100 entries).'});
+    const measurement = {...data, _id:crypto.randomUUID(), source:'synthetic', measuredAt:new Date(now()).toISOString()};
+    req.demo.measurements.unshift(measurement);
+    res.status(201).json({data:measurement});
+  });
   app.get('/api/alerts', (req, res) => res.json({ data: req.demo.alerts }));
   app.patch('/api/alerts/:id/read', (req, res) => {
     const alert = req.demo.alerts.find(a => a._id === req.params.id);
@@ -49,7 +68,7 @@ function createPreviewApp({ now = Date.now, idleTimeoutMs = 8 * 60 * 60 * 1000, 
     const days = { daily: 1, weekly: 7, monthly: 30 }[period];
     if (!days) return res.status(400).json({ message: 'Invalid period.' });
     const entries = req.demo.measurements.filter(m => Date.parse(m.measuredAt) >= now() - days * 86400000);
-    const avg = key => entries.length ? entries.reduce((sum, m) => sum + m[key], 0) / entries.length : null;
+    const avg = key => { const values = entries.map(m => m[key]).filter(Number.isFinite); return values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : null; };
     return res.json({ data: { period, summary: { records: entries.length, avgHeartRate: avg('heartRate'), avgSpo2: avg('spo2'), avgTemperature: avg('temperature'), totalSleepMinutes: 0, totalSteps: 0 } } });
   });
   app.get('/api/cognitive-state/status', getCognitiveStateStatus);

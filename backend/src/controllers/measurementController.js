@@ -415,6 +415,7 @@ const deleteMeasurement = async (req, res) => {
 };
 
 module.exports = {
+  validateMeasurementPayload,
   createMeasurement,
   getMeasurements,
   getMeasurementById,

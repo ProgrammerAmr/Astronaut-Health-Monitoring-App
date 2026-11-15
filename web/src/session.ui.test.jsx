@@ -98,3 +98,24 @@ test('a failed preview recovery stays on the dashboard and allows reconnect', as
   await waitFor(() => expect(localStorage.getItem('orbitcare_preview_token')).toBe('token-1'));
   expect(screen.getByText('SYNTHETIC PREVIEW')).toBeTruthy();
 });
+
+test('demo vitals form sends acknowledged fictional numbers to preview API', async () => {
+  const normalFetch = globalThis.fetch;
+  let saved;
+  vi.stubGlobal('fetch', vi.fn((url, options) => {
+    if (url === '/api/measurements' && options.method === 'POST') {
+      saved = JSON.parse(options.body);
+      return Promise.resolve(response(201, {data:{}}));
+    }
+    return normalFetch(url, options);
+  }));
+  render(<App/>);
+  fireEvent.click(screen.getByText('Open synthetic demo'));
+  await screen.findByText('Log demo vitals');
+  fireEvent.click(screen.getByText('Log demo vitals'));
+  fireEvent.change(screen.getByLabelText(/Heart rate/), {target:{value:'80'}});
+  fireEvent.click(screen.getByLabelText(/I confirm these values are fictional/));
+  fireEvent.click(screen.getByText('Save measurement'));
+  await waitFor(() => expect(saved).toEqual({source:'manual', syntheticConfirmed:true, heartRate:80}));
+  await waitFor(() => expect(screen.queryByText('Log fictional vitals')).toBeNull());
+});

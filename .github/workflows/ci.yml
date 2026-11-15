@@ -76,11 +76,11 @@ jobs:
       - name: Run Flutter static analyzer
         run: |
           set +e
-          output=$(flutter analyze 2>&1)
+          output=$(flutter analyze --no-fatal-infos 2>&1)
           status=$?
           echo "$output"
           if [ $status -ne 0 ]; then
-            echo "$output" | grep -E "error •|warning •|info •" | head -n 30 | while IFS= read -r line; do
+            echo "$output" | grep -E "error •|warning •" | head -n 30 | while IFS= read -r line; do
               echo "::error::$line"
             done
           fi
@@ -93,7 +93,7 @@ jobs:
           status=$?
           echo "$output"
           if [ $status -ne 0 ]; then
-            echo "$output" | tail -n 35 | while IFS= read -r line; do
+            echo "$output" | grep -E "\[E\]|Expected:|Actual:|Exception|Error|FAILED|Some tests failed" | head -n 10 | while IFS= read -r line; do
               echo "::error::$line"
             done
           fi

@@ -108,12 +108,13 @@ Success response:
   "user": {
     "id": "USER_ID",
     "name": "Test Astronaut",
-    "email": "astronaut@example.com"
+    "email": "astronaut@example.com",
+    "role": "astronaut"
   }
 }
 ```
 
-The user must verify their email before logging in.
+The user must verify their email before logging in. Unverified accounts receive HTTP `403`.
 
 ### 4.3 Send OTP
 
@@ -167,7 +168,8 @@ Success response for signup:
   "user": {
     "id": "USER_ID",
     "name": "Test Astronaut",
-    "email": "astronaut@example.com"
+    "email": "astronaut@example.com",
+    "role": "astronaut"
   }
 }
 ```
@@ -209,7 +211,37 @@ Success response:
 }
 ```
 
-Password must contain at least 8 characters.
+Password must contain at least 8 characters. Failed OTP attempts are tracked and capped at 5 attempts.
+
+### 4.6 Logout
+
+**POST** `/auth/logout`
+
+Headers: Authorization required (`Bearer <JWT>`).
+
+Acknowledges client sign-out for the authenticated session (the client discards its locally stored JWT token).
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+### Local Synthetic Demo Seed
+
+For local hackathon demonstrations (non-production, clearly labeled synthetic data only, zero real personal data):
+
+```bash
+cd backend
+npm run seed:demo
+```
+
+This creates or refreshes the local synthetic astronaut account (`demo.astronaut@orbitcare.local`), 5 synthetic measurements (`source: "imported"`), and 2 synthetic non-CSM demonstration alerts.
 
 ---
 
@@ -598,3 +630,46 @@ Example error response:
 **Backend:** Node.js + Express.js + MongoDB
 
 **Documentation status:** Backend endpoints documented for Flutter integration.
+
+---
+
+# 13. Cognitive State Monitoring Research API (DEC-001)
+
+> **Experimental research prototype — not a medical diagnosis or flight-certified system.** No trained or validated CSM model artifact is currently shipped. Live-sensor inference is rejected, raw physiological waveforms are not accepted or persisted, and outputs do not trigger automatic alerts.
+
+Both endpoints require a valid `Authorization: Bearer <JWT>` header. Non-admin users may only request analysis for their own account (`astronautId` omitted or matching the authenticated user ID; otherwise `403 Forbidden`).
+
+Configure upstream connection via environment variables (see `backend/.env.example`):
+- `CSM_AI_SERVICE_URL` — base URL of the Python FastAPI AI service (no hardcoded default)
+- `CSM_AI_TIMEOUT_MS` — request timeout in milliseconds (default `5000`, clamped to `500–30000`)
+
+### 13.1 Get Service Status & Limitations
+
+**GET** `/cognitive-state/status`
+
+Returns service availability, `registered_model_available`, `model_status.validated` (`false`), fixed limitations, and disclaimer (never claims model health). Returns `503`/`504` safely when unconfigured, unreachable, or timed out.
+
+### 13.2 Request Cognitive State Analysis
+
+**POST** `/cognitive-state/analyze`
+
+Enforces a `32 KiB` body-size cap and strict server-side schema validation.
+
+```json
+{
+  "mode": "synthetic_demo | research_replay",
+  "sessionId": "optional-session-id",
+  "astronautId": "optional-self-id-or-admin-target",
+  "windowEndSec": 120.0,
+  "dataProvenance": "synthetic | simulated | real_nasa_csm_replay",
+  "signalQuality": {
+    "valid": true,
+    "sqi_score": 0.95,
+    "reasons": []
+  }
+}
+```
+
+- `mode: "live_sensor"` or `dataProvenance: "live_sensor"` → rejected (`400`, `LIVE_SENSOR_UNSUPPORTED`).
+- Raw physiological signal fields (`eeg`, `ecg`, `gsr`, `resp`, `raw_signals`, `samples`) → rejected (`400`, `RAW_SIGNAL_NOT_ACCEPTED`).
+- When no verified model artifact exists, SQI is low/missing, or upstream is unavailable/timed out → returns safe abstention (`INSUFFICIENT_DATA` or `ERROR`) with `prediction.abstained: true` and `prediction.probabilities: null` (never substitutes or invents predictions).

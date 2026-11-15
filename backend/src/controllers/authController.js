@@ -5,6 +5,7 @@ const createToken = require("../utils/token");
 const { generateOtp, hashOtp } = require("../utils/otp");
 const sendOtpEmail = require("../utils/sendEmail");
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
 async function createAndSendOtp(email, purpose) {
@@ -20,7 +21,8 @@ async function createAndSendOtp(email, purpose) {
 }
 
 const register = asyncHandler(async (req, res) => {
-  const { fullName, name, email, password } = req.body;
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const { fullName, name, email, password } = body;
   const cleanEmail = normalizeEmail(email);
   const cleanName = String(fullName || name || "").trim();
 
@@ -30,10 +32,22 @@ const register = asyncHandler(async (req, res) => {
       message: "fullName, email and password are required"
     });
   }
-  if (String(password).length < 8) {
+  if (!EMAIL_RE.test(cleanEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Password must be at least 8 characters"
+      message: "Please provide a valid email address"
+    });
+  }
+  if (cleanName.length > 120) {
+    return res.status(400).json({
+      success: false,
+      message: "Name must be 120 characters or fewer"
+    });
+  }
+  if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be between 8 and 128 characters"
     });
   }
 
@@ -68,10 +82,11 @@ const register = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const { password } = req.body;
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const email = normalizeEmail(body.email);
+  const { password } = body;
 
-  if (!email || !password) {
+  if (!email || !password || typeof password !== "string") {
     return res.status(400).json({
       success: false,
       message: "Email and password are required"
@@ -98,16 +113,18 @@ const login = asyncHandler(async (req, res) => {
     user: {
       id: user._id.toString(),
       name: user.name,
-      email: user.email
+      email: user.email,
+      role: user.role || "astronaut"
     }
   });
 });
 
 const sendOtp = asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const purpose = req.body.purpose || "reset_password";
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const email = normalizeEmail(body.email);
+  const purpose = body.purpose || "reset_password";
 
-  if (!email || !["signup", "reset_password"].includes(purpose)) {
+  if (!email || !EMAIL_RE.test(email) || !["signup", "reset_password"].includes(purpose)) {
     return res.status(400).json({
       success: false,
       message: "A valid email and purpose (signup or reset_password) are required"
@@ -139,9 +156,10 @@ const sendOtp = asyncHandler(async (req, res) => {
 });
 
 const verifyOtp = asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const otp = String(req.body.otp || "");
-  const purpose = req.body.purpose || "signup";
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const email = normalizeEmail(body.email);
+  const otp = String(body.otp || "").trim();
+  const purpose = body.purpose || "signup";
 
   if (!email || !otp || !["signup", "reset_password"].includes(purpose)) {
     return res.status(400).json({
@@ -190,7 +208,12 @@ const verifyOtp = asyncHandler(async (req, res) => {
       success: true,
       message: "OTP verified. Account activated successfully.",
       token: createToken(user),
-      user: { id: user._id.toString(), name: user.name, email: user.email }
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role || "astronaut"
+      }
     });
   }
 
@@ -202,9 +225,10 @@ const verifyOtp = asyncHandler(async (req, res) => {
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const otp = String(req.body.otp || "");
-  const newPassword = String(req.body.newPassword || "");
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const email = normalizeEmail(body.email);
+  const otp = String(body.otp || "").trim();
+  const newPassword = typeof body.newPassword === "string" ? body.newPassword : "";
 
   if (!email || !otp || !newPassword) {
     return res.status(400).json({
@@ -212,22 +236,34 @@ const resetPassword = asyncHandler(async (req, res) => {
       message: "Email, OTP and newPassword are required"
     });
   }
-  if (newPassword.length < 8) {
+  if (newPassword.length < 8 || newPassword.length > 128) {
     return res.status(400).json({
       success: false,
-      message: "New password must be at least 8 characters"
+      message: "New password must be between 8 and 128 characters"
     });
   }
 
   const record = await Otp.findOne({ email, purpose: "reset_password" })
     .sort({ createdAt: -1 });
 
-  if (
-    !record ||
-    record.expiresAt < new Date() ||
-    record.otpHash !== hashOtp(otp) ||
-    record.attempts >= 5
-  ) {
+  if (!record || record.expiresAt < new Date()) {
+    return res.status(400).json({
+      success: false,
+      message: "OTP is invalid or expired. Request a new code."
+    });
+  }
+
+  if (record.attempts >= 5) {
+    await Otp.deleteOne({ _id: record._id });
+    return res.status(429).json({
+      success: false,
+      message: "Too many attempts. Request a new OTP."
+    });
+  }
+
+  if (record.otpHash !== hashOtp(otp)) {
+    record.attempts += 1;
+    await record.save();
     return res.status(400).json({
       success: false,
       message: "OTP is invalid or expired. Request a new code."
@@ -249,4 +285,12 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.json({ success: true, message: "Password reset successfully" });
 });
 
-module.exports = { register, login, sendOtp, verifyOtp, resetPassword };
+// Stateless JWT logout acknowledgement (clients must also clear stored tokens).
+const logout = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully"
+  });
+});
+
+module.exports = { register, login, sendOtp, verifyOtp, resetPassword, logout };

@@ -1,14 +1,14 @@
-
 import 'package:flutter/material.dart';
 
-import '../screens/splash_screen.dart';
-import '../screens/onboarding_screen.dart';
-
-import '../auth/login_screen.dart';
-import '../auth/signup_screen.dart';
 import '../auth/forgot_password_screen.dart';
+import '../auth/login_screen.dart';
 import '../auth/otp_screen.dart';
 import '../auth/reset_password_screen.dart';
+import '../auth/signup_screen.dart';
+import '../home/add_measurement_screen.dart';
+import '../home/home_screen.dart';
+import '../screens/onboarding_screen.dart';
+import '../screens/splash_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -18,6 +18,8 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String otp = '/otp';
   static const String resetPassword = '/reset-password';
+  static const String home = '/home';
+  static const String addMeasurement = '/measurements/add';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -27,5 +29,7 @@ class AppRoutes {
     forgotPassword: (context) => const ForgotPasswordScreen(),
     otp: (context) => const OtpScreen(),
     resetPassword: (context) => const ResetPasswordScreen(),
+    home: (context) => const HomeScreen(),
+    addMeasurement: (context) => const AddMeasurementScreen(),
   };
 }

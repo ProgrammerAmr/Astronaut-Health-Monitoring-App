@@ -1,21 +1,23 @@
-
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_widgets.dart';
+import '../core/models/orbitcare_models.dart';
+import '../core/state/session_controller.dart';
 import '../routes/app_routes.dart';
+import 'auth_status_banner.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState
-    extends State<ForgotPasswordScreen> {
-  final emailController = TextEditingController();
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController emailController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -23,23 +25,56 @@ class _ForgotPasswordScreenState
     super.dispose();
   }
 
-  void sendCode() {
+  Future<void> _handleSendCode() async {
     final email = emailController.text.trim();
-
-    if (email.isEmpty || !email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email address.'),
-        ),
-      );
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address.';
+      });
       return;
     }
 
-    Navigator.pushNamed(
-      context,
-      AppRoutes.otp,
-      arguments: email,
-    );
+    final sessionController = SessionScope.maybeOf(context);
+    if (sessionController == null) {
+      setState(() {
+        _errorMessage = 'Session service is unavailable.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await sessionController.apiClient.sendOtp(
+        email: email,
+        purpose: 'reset_password',
+      );
+      if (!mounted) return;
+      Navigator.pushNamed(
+        context,
+        AppRoutes.otp,
+        arguments: OtpRouteArgs(email: email, purpose: 'reset_password'),
+      );
+    } on OrbitCareApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Unable to send reset code. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -47,150 +82,134 @@ class _ForgotPasswordScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 20,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 15),
-
-              // Header
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                          },
                     icon: const Icon(
-                      Icons.arrow_back_ios,
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.navy,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'OrbitCare',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                       color: AppColors.navy,
                     ),
                   ),
-                  const Expanded(
-                    child: Text(
-                      'Forgot Password',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.navy,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 48),
                 ],
               ),
-
-              const SizedBox(height: 45),
-
-              // Illustration
-              const Center(
-                child: Icon(
-                  Icons.lock_reset_rounded,
-                  size: 95,
-                  color: AppColors.primary,
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Title
+              const SizedBox(height: 22),
+              const Center(child: OrbitLogo(height: 85)),
+              const SizedBox(height: 26),
               const Center(
                 child: Text(
                   'Forgot Password?',
-                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                     color: AppColors.navy,
                   ),
                 ),
               ),
-
-              const SizedBox(height: 15),
-
-              // Description
-              const Text(
-                'Don’t worry! It happens. Please enter '
-                'the email address associated with your '
-                'account and we will send you a verification code.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.7,
-                  color: AppColors.grey,
+              const SizedBox(height: 12),
+              const Center(
+                child: Text(
+                  'Enter the email address associated with your\naccount and we will send a 6-digit verification code.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppColors.grey,
+                    height: 1.5,
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 45),
-
-              // Email field
-              const SectionLabel(
-                text: 'Registered Email Address',
-                icon: Icons.email_outlined,
-              ),
-
-              const SizedBox(height: 10),
-
-              AppTextField(
-                label: 'Email Address',
-                hint: 'astronaut@nasa.gov',
-                icon: Icons.alternate_email,
-                keyboardType: TextInputType.emailAddress,
-                controller: emailController,
-              ),
-
-              const SizedBox(height: 15),
-
-              const Row(
-                children: [
-                  Icon(
-                    Icons.shield_outlined,
-                    color: AppColors.teal,
-                    size: 17,
-                  ),
-                  SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      'Your account information is securely protected.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.grey,
-                      ),
+              const SizedBox(height: 26),
+              if (_errorMessage != null) ...[
+                AuthStatusBanner(isError: true, message: _errorMessage!),
+                const SizedBox(height: 16),
+              ],
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.navy.withValues(alpha: 0.05),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    AppTextField(
+                      label: 'Email Address',
+                      hint: 'astronaut@orbitcare.local',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      controller: emailController,
+                      enabled: !_isLoading,
+                    ),
+                    const SizedBox(height: 26),
+                    PrimaryButton(
+                      text: 'Send Verification Code',
+                      icon: Icons.arrow_forward,
+                      isLoading: _isLoading,
+                      onPressed: _isLoading ? null : _handleSendCode,
+                    ),
+                  ],
+                ),
               ),
-
-              const Spacer(),
-
-              // Send verification code
-              PrimaryButton(
-                text: 'Send Verification Code',
-                icon: Icons.arrow_forward,
-                onPressed: sendCode,
-              ),
-
-              const SizedBox(height: 20),
-
-              // Back to login
+              const SizedBox(height: 30),
               Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.login,
-                    );
-                  },
-                  child: const Text(
-                    'Back to Login',
-                    style: TextStyle(
-                      color: AppColors.navy,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                child: GestureDetector(
+                  onTap: _isLoading
+                      ? null
+                      : () {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            AppRoutes.login,
+                          );
+                        },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.arrow_back,
+                        color: AppColors.primary,
+                        size: 18,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Back to Log In',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
             ],
           ),

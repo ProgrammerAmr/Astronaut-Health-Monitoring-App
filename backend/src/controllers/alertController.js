@@ -1,4 +1,4 @@
-﻿
+
 const Alert = require("../models/Alert");
 const mongoose = require("mongoose");
 
@@ -47,6 +47,27 @@ const createAlert = async (req, res) => {
       return res.status(400).json({
         status: "fail",
         message: "Invalid astronaut ID",
+      });
+    }
+
+    if (
+      severity !== undefined &&
+      !["low", "medium", "high", "critical"].includes(severity)
+    ) {
+      return res.status(400).json({
+        status: "fail",
+        message: "severity must be low, medium, high, or critical",
+      });
+    }
+
+    if (
+      relatedMeasurement !== undefined &&
+      relatedMeasurement !== null &&
+      !mongoose.isValidObjectId(relatedMeasurement)
+    ) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid relatedMeasurement ID",
       });
     }
 

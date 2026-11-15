@@ -19,3 +19,26 @@ The AI card uses `/api/cognitive-state/status` and `/api/cognitive-state/analyze
 npm test
 npm run build
 ```
+
+## Connection troubleshooting
+
+The web server by itself is **not** the backend. A Vite proxy error or “Cannot connect to the backend” means the Node API is not reachable at the configured server-side address. First start MongoDB and then Node, and verify the backend before using the web login. For example, with Docker available locally:
+
+```sh
+docker run -d --name orbitcare-mongo -p 27017:27017 mongo:7
+cd backend
+cp .env.example .env
+```
+
+Edit `backend/.env`: set `MONGO_URI=mongodb://127.0.0.1:27017/orbitcare` and `JWT_SECRET` to a long random secret. Set `CSM_AI_SERVICE_URL=http://127.0.0.1:8000` if the AI service runs on the same machine. Then:
+
+```sh
+npm ci
+npm run dev
+# In a second terminal, check:
+curl http://127.0.0.1:5000/api/health
+```
+
+If Node cannot start, read its terminal output and check MongoDB and `.env`. Once the health check works, start the web server as above and register/verify or seed the demo account. `ORBITCARE_BACKEND_URL` must be reachable from the machine running Vite. For a deployed frontend, configure the hosting reverse proxy to forward `/api` to Node; Vite's development proxy does not exist in a static deployment. An HTML response at `/api` usually means the host is serving the frontend fallback instead of forwarding the API request.
+
+The AI service is separate: start it and set `CSM_AI_SERVICE_URL` to enable the experimental CSM card. Its absence does not prevent login, but will display a service-unavailable message on the card.

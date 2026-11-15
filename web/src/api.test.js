@@ -16,3 +16,11 @@ test('surfaces safe API error messages and status', async () => {
 test('handles a network failure', async () => {
   await assert.rejects(request('/health', { fetcher: async () => { throw Error('offline'); } }), e => e.status === 0);
 });
+test('explains a proxy error instead of reporting invalid JSON', async () => {
+  await assert.rejects(request('/auth/login', { fetcher: async () => ({ ok: false, status: 502, json: async () => ({ message: 'Cannot connect to the backend. Start MongoDB and the Node API, then try again.' }) }) }), e => e.status === 502 && e.message.includes('Start MongoDB'));
+});
+test('explains non-JSON proxy errors and SPA fallback separately', async () => {
+  const invalid = async () => { throw new SyntaxError('Not JSON'); };
+  await assert.rejects(request('/health', { fetcher: async () => ({ ok: false, status: 500, json: invalid }) }), e => e.status === 500 && e.message.includes('HTTP 500'));
+  await assert.rejects(request('/health', { fetcher: async () => ({ ok: true, status: 200, json: invalid }) }), e => e.message.includes('not the frontend'));
+});

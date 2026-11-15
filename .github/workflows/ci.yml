@@ -1,0 +1,80 @@
+name: OrbitCare CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "arena/**"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-tests:
+    name: Python AI & DEC-001 CSM Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python test dependencies (no Ollama / NASA downloads required)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest fastapi httpx numpy scipy scikit-learn python-dotenv
+
+      - name: Run Python test suites
+        run: pytest -v AI_training/test_nasa_claude.py AI_training/csm/tests/
+
+  backend-tests:
+    name: Node.js Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Run Node.js auth, ownership, and CSM tests
+        run: npm test
+
+  flutter-tests:
+    name: Flutter Analyze & Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Flutter
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Fetch Flutter dependencies
+        run: flutter pub get
+
+      - name: Run Flutter static analyzer
+        run: flutter analyze
+
+      - name: Run Flutter unit and widget tests
+        run: flutter test

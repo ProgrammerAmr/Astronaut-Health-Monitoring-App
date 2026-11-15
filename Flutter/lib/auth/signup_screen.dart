@@ -91,6 +91,10 @@ class _SignupScreenState extends State<SignupScreen> {
     Navigator.pushNamed(
       context,
       AppRoutes.otp,
+      arguments: {
+        'email': emailController.text.trim(),
+        'isPasswordReset': false,
+      },
     );
   }
 

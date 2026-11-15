@@ -108,6 +108,27 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
+  bool get _isPasswordReset {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic>) {
+      return args['isPasswordReset'] == true;
+    }
+    return false;
+  }
+
+  String get _recipientEmail {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic>) {
+      final email = args['email'];
+      if (email is String && email.isNotEmpty) {
+        return email;
+      }
+    } else if (args is String && args.isNotEmpty) {
+      return args;
+    }
+    return 'dr.elara@station.space';
+  }
+
   void verifyCode() {
     final code = controllers.map((e) => e.text).join();
 
@@ -131,10 +152,18 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
-    Navigator.pushReplacementNamed(
-      context,
-      AppRoutes.resetPassword,
-    );
+    if (_isPasswordReset) {
+      Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.resetPassword,
+      );
+    } else {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+        (route) => false,
+      );
+    }
   }
 
   Widget otpBox(int index) {
@@ -252,9 +281,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
               const SizedBox(height: 15),
 
-              const Text(
-                'dr.elara@station.space',
-                style: TextStyle(
+              Text(
+                _recipientEmail,
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.navy,
                   fontWeight: FontWeight.bold,

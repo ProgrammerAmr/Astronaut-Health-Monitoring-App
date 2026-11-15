@@ -38,7 +38,10 @@ class _ForgotPasswordScreenState
     Navigator.pushNamed(
       context,
       AppRoutes.otp,
-      arguments: email,
+      arguments: {
+        'email': email,
+        'isPasswordReset': true,
+      },
     );
   }
 

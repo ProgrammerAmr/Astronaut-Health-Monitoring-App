@@ -1,5 +1,4 @@
-﻿
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 
 const measurementSchema = new mongoose.Schema(
   {
@@ -9,36 +8,20 @@ const measurementSchema = new mongoose.Schema(
       required: true,
     },
 
-    heartRate: {
-      type: Number,
-      min: 0,
-    },
+    heartRate: { type: Number, min: 0 },
+    pulseRate: { type: Number, min: 0 },
+    respiratoryRate: { type: Number, min: 0 },
+    spo2: { type: Number, min: 0, max: 100 },
 
-    pulseRate: {
-      type: Number,
-      min: 0,
-    },
-
-    respiratoryRate: {
-      type: Number,
-      min: 0,
-    },
-
-    spo2: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
+    // Body temperature in Celsius
+    temperature: { type: Number, min: 0, max: 100 },
 
     bloodPressure: {
       systolic: { type: Number, min: 0 },
       diastolic: { type: Number, min: 0 },
     },
 
-    bloodSugar: {
-      type: Number,
-      min: 0,
-    },
+    bloodSugar: { type: Number, min: 0 },
 
     sleep: {
       durationMinutes: { type: Number, min: 0 },
@@ -57,6 +40,7 @@ const measurementSchema = new mongoose.Schema(
         enum: ["low", "light", "moderate", "high", "intense"],
       },
     },
+
     measuredAt: {
       type: Date,
       default: Date.now,

@@ -1,5 +1,5 @@
-
 const Measurement = require("../models/Measurement");
+const Alert = require("../models/Alert");
 
 const getDashboard = async (req, res) => {
   try {
@@ -7,7 +7,7 @@ const getDashboard = async (req, res) => {
       ? {}
       : { astronaut: req.user._id };
 
-    const [totalMeasurements, averages, latestMeasurements] =
+    const [totalMeasurements, averages, latestMeasurements, unreadAlerts] =
       await Promise.all([
         Measurement.countDocuments(filter),
 
@@ -20,6 +20,7 @@ const getDashboard = async (req, res) => {
               averagePulseRate: { $avg: "$pulseRate" },
               averageRespiratoryRate: { $avg: "$respiratoryRate" },
               averageSpo2: { $avg: "$spo2" },
+              averageTemperature: { $avg: "$temperature" },
             },
           },
         ]),
@@ -27,13 +28,26 @@ const getDashboard = async (req, res) => {
         Measurement.find(filter)
           .sort({ measuredAt: -1 })
           .limit(5),
+
+        Alert.countDocuments({
+          ...filter,
+          isRead: false,
+        }),
       ]);
 
     res.status(200).json({
       status: "success",
       data: {
         totalMeasurements,
-        averages: averages[0] || {},
+        unreadAlerts,
+        averages: averages[0] || {
+          averageHeartRate: null,
+          averagePulseRate: null,
+          averageRespiratoryRate: null,
+          averageSpo2: null,
+          averageTemperature: null,
+        },
+        latestMeasurement: latestMeasurements[0] || null,
         latestMeasurements,
       },
     });

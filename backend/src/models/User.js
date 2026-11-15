@@ -18,6 +18,26 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    avatarUrl: {
+  type: String,
+  default: null,
+},
+
+mission: {
+  name: { type: String, default: "" },
+  role: { type: String, default: "" },
+  status: { type: String, default: "" },
+},
+
+preferences: {
+  notificationsEnabled: { type: Boolean, default: true },
+  temperatureUnit: {
+    type: String,
+    enum: ["C", "F"],
+    default: "C",
+  },
+},
+
     password: {
       type: String,
       required: true,

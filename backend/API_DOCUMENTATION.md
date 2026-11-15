@@ -1,43 +1,84 @@
-# OrbitCare API Documentation
+# OrbitCare – Backend API Documentation
 
-## Base URL
+## 1. Project Overview
 
-- Local machine / Flutter Web: `http://localhost:5000/api`
-- Android Emulator: `http://10.0.2.2:5000/api`
-- Physical Android/iPhone: `http://YOUR_COMPUTER_LAN_IP:5000/api` (same Wi-Fi)
+OrbitCare is an Astronaut Health Monitoring System.
 
-## Authentication
+The backend provides APIs for:
+- User authentication and email verification.
+- Astronaut profile management.
+- Health measurements management.
+- Dashboard statistics.
+- Health alerts.
+- Health reports.
 
-JWT Bearer Token. After login or successful signup OTP verification, save the token securely.
-For protected endpoints send:
+**Backend Stack:** Node.js, Express.js, MongoDB, Mongoose, JWT.
 
-`Authorization: Bearer YOUR_TOKEN`
+---
 
-## Standard error response
+## 2. Base URLs
 
-```json
-{
-  "success": false,
-  "message": "Error message"
-}
+| Environment | Base URL |
+|---|---|
+| Local computer | `http://localhost:5000/api` |
+| Android Emulator | `http://10.0.2.2:5000/api` |
+| Physical Android device | `http://YOUR_COMPUTER_LAN_IP:5000/api` |
+
+Replace `YOUR_COMPUTER_LAN_IP` with the computer's local IP address when testing on a physical device.
+
+## 3. General API Conventions
+
+- Request and response bodies use JSON.
+- Protected endpoints require a JWT token.
+- MongoDB IDs are returned as strings.
+- Dates use ISO 8601 format.
+- Successful responses generally include `success: true`.
+- Error responses include `success: false` and a message.
+
+### Authorization Header
+
+For protected endpoints, send:
+
+```http
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
 ```
 
-## 1. Authentication
+The token is returned after successful login or signup verification.
 
-### POST `/auth/register`
+---
 
-Creates an unverified account and automatically sends a signup OTP.
+# 4. Authentication APIs
+
+All authentication endpoints use:
+
+`/auth`
+
+### 4.1 Register
+
+**POST** `/auth/register`
+
+Creates an account and sends an OTP for email verification.
 
 Request:
+
 ```json
 {
-  "fullName": "Noran Fawzy",
-  "email": "noran@example.com",
+  "fullName": "Test Astronaut",
+  "email": "astronaut@example.com",
   "password": "Password123"
 }
 ```
 
-Response:
+You can use `name` instead of `fullName`.
+
+Validation:
+- Name, email, and password are required.
+- Password must contain at least 8 characters.
+- An already verified email cannot register again.
+
+Success response:
+
 ```json
 {
   "success": true,
@@ -45,43 +86,56 @@ Response:
 }
 ```
 
-### POST `/auth/login`
+### 4.2 Login
+
+**POST** `/auth/login`
 
 Request:
+
 ```json
 {
-  "email": "noran@example.com",
+  "email": "astronaut@example.com",
   "password": "Password123"
 }
 ```
 
-Response:
+Success response:
+
 ```json
 {
   "success": true,
   "token": "JWT_TOKEN",
   "user": {
-    "id": "MONGODB_OBJECT_ID",
-    "name": "Noran Fawzy",
-    "email": "noran@example.com"
+    "id": "USER_ID",
+    "name": "Test Astronaut",
+    "email": "astronaut@example.com"
   }
 }
 ```
 
-### POST `/auth/send-otp`
+The user must verify their email before logging in.
 
-Used to resend signup OTP or send forgot-password OTP.
+### 4.3 Send OTP
+
+**POST** `/auth/send-otp`
 
 Request:
+
 ```json
 {
-  "email": "noran@example.com",
+  "email": "astronaut@example.com",
   "purpose": "signup"
 }
 ```
-For forgot password, use `"purpose": "reset_password"`.
 
-Response:
+Supported purposes:
+- `signup`
+- `reset_password`
+
+If `purpose` is omitted, it defaults to `reset_password`.
+
+Success response:
+
 ```json
 {
   "success": true,
@@ -89,47 +143,163 @@ Response:
 }
 ```
 
-### POST `/auth/verify-otp`
+### 4.4 Verify OTP
 
-Signup verification request:
+**POST** `/auth/verify-otp`
+
+Request for signup:
+
 ```json
 {
-  "email": "noran@example.com",
+  "email": "astronaut@example.com",
   "otp": "123456",
   "purpose": "signup"
 }
 ```
 
-Successful signup verification returns a JWT and user object, so Flutter can navigate to Home.
+Success response for signup:
 
-Forgot-password verification request uses `"purpose": "reset_password"`. It validates the code but does not change the password.
-
-### POST `/auth/reset-password`
-
-Request:
 ```json
 {
-  "email": "noran@example.com",
+  "success": true,
+  "message": "OTP verified. Account activated successfully.",
+  "token": "JWT_TOKEN",
+  "user": {
+    "id": "USER_ID",
+    "name": "Test Astronaut",
+    "email": "astronaut@example.com"
+  }
+}
+```
+
+For password reset:
+
+```json
+{
+  "email": "astronaut@example.com",
+  "otp": "123456",
+  "purpose": "reset_password"
+}
+```
+
+Successful password-reset verification returns a confirmation message. The OTP remains valid until the reset-password endpoint consumes it.
+
+OTP expiration: 10 minutes.
+
+### 4.5 Reset Password
+
+**POST** `/auth/reset-password`
+
+Request:
+
+```json
+{
+  "email": "astronaut@example.com",
   "otp": "123456",
   "newPassword": "NewPassword123"
 }
 ```
 
-## 2. Measurements
+Success response:
 
-All measurement endpoints require Bearer token.
-
-### POST `/measurements`
-
-Saves a measurement for the currently authenticated user.
-
-Example request:
 ```json
 {
-  "heartRate": 78,
-  "pulseRate": 78,
-  "respiratoryRate": 16,
+  "success": true,
+  "message": "Password reset successfully"
+}
+```
+
+Password must contain at least 8 characters.
+
+---
+
+# 5. User Profile APIs
+
+All endpoints in this section require authentication.
+
+### 5.1 Get Current User Profile
+
+**GET** `/users/me`
+
+Headers: Authorization required.
+
+Returns the authenticated user's profile.
+
+### 5.2 Update Current User Profile
+
+**PATCH** `/users/me`
+
+Request example:
+
+```json
+{
+  "name": "Test Astronaut",
+  "avatarUrl": "https://example.com/avatar.png",
+  "mission": {
+    "name": "ISS Mission",
+    "role": "Astronaut",
+    "status": "Active"
+  },
+  "preferences": {
+    "notificationsEnabled": true,
+    "temperatureUnit": "C"
+  }
+}
+```
+
+Supported profile fields:
+- `name`
+- `email`
+- `avatarUrl`
+- `mission`
+- `preferences`
+
+Temperature unit values: `C` or `F`.
+
+Note: `avatarUrl` stores an image URL. This endpoint does not upload image files.
+
+### 5.3 Change Password
+
+**PATCH** `/users/change-password`
+
+Request:
+
+```json
+{
+  "currentPassword": "OldPassword123",
+  "newPassword": "NewPassword123"
+}
+```
+
+The new password must contain at least 8 characters.
+
+### 5.4 Get All Users (Admin Only)
+
+**GET** `/users`
+
+Requires an authenticated admin account.
+
+---
+
+# 6. Health Measurements APIs
+
+All measurement endpoints require authentication.
+
+Base path: `/measurements`
+
+### 6.1 Create Measurement
+
+**POST** `/measurements`
+
+Request example:
+
+```json
+{
+  "heartRate": 80,
+  "pulseRate": 80,
+  "respiratoryRate": 17,
   "spo2": 98,
+  "temperature": 37.1,
   "bloodPressure": {
     "systolic": 120,
     "diastolic": 80
@@ -140,75 +310,291 @@ Example request:
     "quality": "good"
   },
   "activity": {
-    "steps": 6500,
-    "calories": 230,
-    "durationMinutes": 45,
+    "steps": 5000,
+    "calories": 250,
+    "durationMinutes": 30,
     "level": "moderate"
   },
-  "measuredAt": "2026-11-14T18:00:00.000Z",
-  "source": "sensor"
+  "measuredAt": "2026-11-15T10:00:00.000Z",
+  "source": "manual"
 }
 ```
 
-Each field is optional; send only the values that exist. `source` can be `sensor`, `manual`, or `imported`.
+Supported fields:
+- `heartRate`
+- `pulseRate`
+- `respiratoryRate`
+- `spo2`
+- `temperature`
+- `bloodPressure`
+- `bloodSugar`
+- `sleep`
+- `activity`
+- `measuredAt`
+- `source`
 
-### GET `/measurements`
+Source values:
+- `sensor`
+- `manual`
+- `imported`
 
-Optional query parameters:
-- `from`: ISO date
-- `to`: ISO date
-- `page`: page number (default 1)
-- `limit`: page size (default 20, max 100)
+Sleep quality:
+- `poor`
+- `fair`
+- `good`
+- `excellent`
+
+Activity level:
+- `low`
+- `light`
+- `moderate`
+- `high`
+- `intense`
+
+`measuredAt` and `source` are optional. The backend provides defaults.
+
+### 6.2 Get Measurements
+
+**GET** `/measurements`
+
+Returns the authenticated user's measurements.
+
+Supported query parameters:
+
+| Parameter | Description |
+|---|---|
+| `type` | Filter by measurement type |
+| `period` | `daily`, `weekly`, or `monthly` |
+| `from` | Start date |
+| `to` | End date |
+| `startDate` | Alternative start date |
+| `endDate` | Alternative end date |
+| `page` | Page number |
+| `limit` | Number of records (maximum 100) |
 
 Example:
-`GET /measurements?from=2026-11-01T00:00:00.000Z&to=2026-11-14T23:59:59.000Z&page=1&limit=20`
 
-Returns only the logged-in user's records, newest first.
+```http
+GET /measurements?type=temperature&period=weekly
+```
 
-### GET `/measurements/:id`
+Other examples:
 
-Returns one measurement owned by the logged-in user.
+```http
+GET /measurements?page=1&limit=10
+GET /measurements?period=daily
+GET /measurements?from=2026-11-01&to=2026-11-15
+```
 
-## 3. Dashboard
+Available measurement types include:
+- `heartRate`
+- `pulseRate`
+- `respiratoryRate`
+- `spo2`
+- `temperature`
+- `bloodPressure`
+- `bloodSugar`
+- `sleep`
+- `activity`
 
-### GET `/dashboard/overview`
+### 6.3 Get Measurement by ID
 
-Protected. Returns latest measurement, total saved measurements and unread alert count.
+**GET** `/measurements/:id`
 
-## 4. Alerts
+Example:
 
-### GET `/alerts`
+```http
+GET /measurements/MEASUREMENT_ID
+```
 
-Protected. Optional `isRead=true` or `isRead=false`.
+### 6.4 Update Measurement
 
-### PATCH `/alerts/:id/read`
+**PUT** `/measurements/:id`
 
-Protected. Marks one of the user's alerts as read.
+Send the fields that need to be updated in the JSON body.
 
-**Note:** Alerts are not generated by this Node API at this stage. The AI/team or a trusted internal process must create/save alert records before Flutter can display them. The backend here only reads and marks them as read.
+### 6.5 Delete Measurement
 
-Alert record fields in MongoDB:
-- `astronaut`: user ObjectId
-- `title`
-- `message`
-- `severity`: `low`, `medium`, `high`, `critical`
-- `isRead`
+**DELETE** `/measurements/:id`
 
-## 5. Reports
+Deletes the specified measurement if the authenticated user owns it.
 
-### GET `/reports?period=daily`
+---
 
-Supported periods: `daily`, `weekly`, `monthly`.
+# 7. Dashboard APIs
 
-Optional `from` and `to` ISO dates can override the default date range.
+All dashboard endpoints require authentication.
 
-Returns a summary calculated from the saved measurements and the matching measurement records. No separate report collection is required.
+### 7.1 Get Dashboard Overview
 
-## Important implementation notes
+**GET** `/dashboard/overview`
 
-1. In development without SMTP settings, OTP is printed in the Node terminal. This is for local testing only. Configure SMTP before production.
-2. MongoDB `_id` values are strings, not integer IDs.
-3. This API returns recorded measurements and simple aggregates. It does not diagnose medical conditions or calculate a clinically validated overall health score.
-4. Blood pressure, blood sugar, sleep and activity are optional fields in the measurement schema. The Flutter team should send only values actually collected by the app/device.
-5. Existing Measurement documents created before adding the required `astronaut` field will not automatically belong to a user. Test with newly created records or migrate old data intentionally.
+Returns dashboard statistics, including:
+- Total measurements.
+- Unread alerts count.
+- Average heart rate.
+- Average SpO2.
+- Average respiratory rate.
+- Average blood sugar.
+- Average temperature.
+- Latest measurement.
+- Latest measurements.
 
+Example:
+
+```http
+GET /dashboard/overview
+```
+
+---
+
+# 8. Alerts APIs
+
+All alert endpoints require authentication.
+
+### 8.1 Get Alerts
+
+**GET** `/alerts`
+
+Returns alerts belonging to the authenticated user.
+
+Optional query parameter:
+
+`isRead=true` or `isRead=false`
+
+Example:
+
+```http
+GET /alerts?isRead=false
+```
+
+### 8.2 Create Alert (Admin Only)
+
+**POST** `/alerts`
+
+Requires an authenticated admin account.
+
+Request:
+
+```json
+{
+  "astronaut": "USER_ID",
+  "title": "High Heart Rate",
+  "message": "Heart rate is above the configured threshold.",
+  "severity": "high",
+  "relatedMeasurement": "MEASUREMENT_ID"
+}
+```
+
+Severity values:
+- `low`
+- `medium`
+- `high`
+- `critical`
+
+`relatedMeasurement` is optional.
+
+### 8.3 Mark Alert as Read
+
+**PATCH** `/alerts/:id/read`
+
+Marks the specified alert as read.
+
+---
+
+# 9. Reports APIs
+
+All report endpoints require authentication.
+
+### 9.1 Get Health Report
+
+**GET** `/reports`
+
+Supported query parameter:
+
+`period=daily|weekly|monthly`
+
+Example:
+
+```http
+GET /reports?period=weekly
+```
+
+Optional date filters:
+- `from`
+- `to`
+
+The report includes aggregated health data such as:
+- Average heart rate.
+- Average SpO2.
+- Average respiratory rate.
+- Average blood sugar.
+- Average temperature.
+- Total steps.
+- Total calories.
+- Total sleep duration.
+- Number of measurements.
+
+---
+
+# 10. Health Check
+
+**GET** `/health`
+
+Example:
+
+```http
+GET /health
+```
+
+Used to check whether the backend server is running.
+
+---
+
+# 11. Important Integration Notes
+
+1. Always store the JWT token after successful login or signup verification.
+2. Send the token in the Authorization header for protected APIs.
+3. Use `10.0.2.2` instead of `localhost` when testing from an Android Emulator.
+4. For a physical device, use the computer's LAN IP address and ensure both devices are on the same network.
+5. OTP delivery depends on the configured email service. In development, OTP may be printed in the backend terminal.
+6. The backend stores measurement data; it does not independently diagnose medical conditions.
+7. Alerts are retrieved from the database. They must be created by an authorized admin or another integrated system. They are not automatically generated by the measurement API.
+8. `avatarUrl` accepts a URL, not a multipart image upload.
+9. Do not hardcode JWT tokens in the Flutter application.
+10. Do not expose passwords, OTPs, or secret environment variables in client-side code.
+
+---
+
+# 12. Error Handling
+
+Common HTTP status codes:
+
+| Status | Meaning |
+|---|---|
+| 200 | Request successful |
+| 201 | Resource created |
+| 400 | Invalid request or validation error |
+| 401 | Missing or invalid authentication |
+| 403 | Forbidden or email not verified |
+| 404 | Resource not found |
+| 409 | Account already exists |
+| 429 | Too many OTP attempts |
+| 500 | Internal server error |
+
+Example error response:
+
+```json
+{
+  "success": false,
+  "message": "Invalid email or password"
+}
+```
+
+---
+
+**Base API path:** `/api`
+
+**Backend:** Node.js + Express.js + MongoDB
+
+**Documentation status:** Backend endpoints documented for Flutter integration.

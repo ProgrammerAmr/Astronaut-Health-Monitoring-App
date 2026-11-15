@@ -1,5 +1,4 @@
-﻿
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 const Measurement = require("../models/Measurement");
 
 const allowedFields = [
@@ -7,6 +6,7 @@ const allowedFields = [
   "pulseRate",
   "respiratoryRate",
   "spo2",
+  "temperature",
   "bloodPressure",
   "bloodSugar",
   "sleep",
@@ -15,12 +15,25 @@ const allowedFields = [
   "source",
 ];
 
+const typeFields = {
+  heartRate: "heartRate",
+  pulseRate: "pulseRate",
+  respiratoryRate: "respiratoryRate",
+  spo2: "spo2",
+  temperature: "temperature",
+  bloodPressure: "bloodPressure.systolic",
+  bloodSugar: "bloodSugar",
+  sleep: "sleep.durationMinutes",
+  activity: "activity.steps",
+};
+
 const getFilter = (req) => {
   return req.user.role === "admin"
     ? {}
     : { astronaut: req.user._id };
 };
 
+// POST /api/measurements
 const createMeasurement = async (req, res) => {
   try {
     const data = {};
@@ -31,26 +44,17 @@ const createMeasurement = async (req, res) => {
       }
     }
 
-    const hasVitalSigns = [
-      "heartRate",
-      "pulseRate",
-      "respiratoryRate",
-      "spo2"
-    ].some((field) => data[field] !== undefined);
+    const hasMeasurement = allowedFields
+      .filter((field) => !["measuredAt", "source"].includes(field))
+      .some((field) => data[field] !== undefined);
 
-    const hasOtherMeasurements = [
-      "bloodPressure",
-      "bloodSugar",
-      "sleep",
-      "activity"
-    ].some((field) => data[field] !== undefined);
-
-    if (!hasVitalSigns && !hasOtherMeasurements) {
+    if (!hasMeasurement) {
       return res.status(400).json({
         status: "fail",
         message: "At least one measurement is required",
       });
     }
+
     const measurement = await Measurement.create({
       ...data,
       astronaut: req.user._id,
@@ -68,43 +72,83 @@ const createMeasurement = async (req, res) => {
   }
 };
 
+// GET /api/measurements
 const getMeasurements = async (req, res) => {
   try {
     const filter = getFilter(req);
 
-    const startDate = req.query.from || req.query.startDate;
-    const endDate = req.query.to || req.query.endDate;
-    if (startDate || endDate) {
-      filter.measuredAt = {};
+    // Filter by measurement type
+    if (req.query.type) {
+      const field = typeFields[req.query.type];
 
-      if (startDate) {
-        filter.measuredAt.$gte = new Date(startDate);
-      }
-
-      if (endDate) {
-        filter.measuredAt.$lte = new Date(endDate);
-      }
-
-      if (Object.values(filter.measuredAt).some(
-        (date) => Number.isNaN(date.getTime())
-      )) {
+      if (!field) {
         return res.status(400).json({
           status: "fail",
-          message: "Invalid date filter",
+          message: `Invalid type. Allowed types: ${Object.keys(typeFields).join(", ")}`,
         });
       }
+
+      filter[field] = { $exists: true, $ne: null };
+    }
+
+    // Filter by period
+    const { period } = req.query;
+
+    if (period && !["daily", "weekly", "monthly"].includes(period)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "period must be daily, weekly or monthly",
+      });
+    }
+
+    let startDate = req.query.from || req.query.startDate;
+    let endDate = req.query.to || req.query.endDate;
+
+    if (period && !startDate && !endDate) {
+      const now = new Date();
+      const from = new Date(now);
+
+      if (period === "daily") from.setDate(from.getDate() - 1);
+      if (period === "weekly") from.setDate(from.getDate() - 7);
+      if (period === "monthly") from.setMonth(from.getMonth() - 1);
+
+      startDate = from;
+      endDate = now;
+    }
+
+    if (startDate || endDate) {
+      const from = startDate ? new Date(startDate) : null;
+      const to = endDate ? new Date(endDate) : null;
+
+      if (
+        (from && Number.isNaN(from.getTime())) ||
+        (to && Number.isNaN(to.getTime())) ||
+        (from && to && from > to)
+      ) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Invalid date range",
+        });
+      }
+
+      filter.measuredAt = {};
+
+      if (from) filter.measuredAt.$gte = from;
+      if (to) filter.measuredAt.$lte = to;
     }
 
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
 
-    const measurements = await Measurement.find(filter)
-      .populate("astronaut", "name email")
-      .sort({ measuredAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    const [measurements, total] = await Promise.all([
+      Measurement.find(filter)
+        .populate("astronaut", "name email")
+        .sort({ measuredAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
 
-    const total = await Measurement.countDocuments(filter);
+      Measurement.countDocuments(filter),
+    ]);
 
     res.status(200).json({
       status: "success",
@@ -122,6 +166,7 @@ const getMeasurements = async (req, res) => {
   }
 };
 
+// GET /api/measurements/:id
 const getMeasurementById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -157,6 +202,7 @@ const getMeasurementById = async (req, res) => {
   }
 };
 
+// PUT /api/measurements/:id
 const updateMeasurement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -208,6 +254,7 @@ const updateMeasurement = async (req, res) => {
   }
 };
 
+// DELETE /api/measurements/:id
 const deleteMeasurement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -250,6 +297,3 @@ module.exports = {
   updateMeasurement,
   deleteMeasurement,
 };
-
-
-

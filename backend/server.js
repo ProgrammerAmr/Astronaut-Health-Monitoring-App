@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -22,6 +22,7 @@ app.use("/api/measurements", require("./src/routes/measurementRoutes"));
 app.use("/api/dashboard", require("./src/routes/dashboardRoutes"));
 app.use("/api/alerts", require("./src/routes/alertRoutes"));
 app.use("/api/reports", require("./src/routes/reportRoutes"));
+app.use("/api/cognitive-state", require("./src/routes/cognitiveStateRoutes"));
 
 app.use((req, res) => {
   res.status(404).json({
@@ -40,15 +41,19 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-(async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`OrbitCare API running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("Server startup failed:", error.message);
-    process.exit(1);
-  }
-})();
+if (require.main === module) {
+  (async () => {
+    try {
+      await connectDB();
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`OrbitCare API running on http://localhost:${PORT}`);
+      });
+    } catch (error) {
+      console.error("Server startup failed:", error.message);
+      process.exit(1);
+    }
+  })();
+}
+
+module.exports = app;
 

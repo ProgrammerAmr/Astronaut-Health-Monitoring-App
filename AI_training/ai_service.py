@@ -21,9 +21,11 @@ from fastapi import Body, FastAPI
 from fastapi.responses import JSONResponse
 
 from nasa_claude import MissionHealthSystem, SCHEMA_VERSION, error_response, setup_logging
+from csm.service import router as csm_router
 
 setup_logging()
 app = FastAPI(title="Astronaut Health AI", version=SCHEMA_VERSION)
+app.include_router(csm_router)
 
 _system: MissionHealthSystem | None = None
 _lock = threading.Lock()

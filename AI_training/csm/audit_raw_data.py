@@ -61,6 +61,20 @@ from .constants import (
 
 SESSION_FILENAME_RE = re.compile(r"(?:^|[/_-])(\d+)_(CA|DA|SS|LOFT)\.csv$", re.IGNORECASE)
 
+AUDIT_MANIFEST_SCHEMA_VERSION = "1.0-dec001-audit-manifest"
+AUDIT_MANIFEST_FILENAME = "audit_manifest.json"
+REQUIRED_AUDIT_GATES = (
+    "archive_access",
+    "schema_integrity",
+    "label_mapping",
+    "loft_4class_coverage",
+)
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+class AuditManifestError(ValueError):
+    """Raised when an audit manifest is missing, malformed, failed, or checksum-mismatched."""
+
 
 # ---------------------------------------------------------------------------
 # Helpers: Hashing, Downloading & Filename Parsing
@@ -534,8 +548,9 @@ def run_raw_audit(
     check_missing_20: bool = False,
     subject_ids: Sequence[int] = PUBLISHED_SUBJECT_IDS,
     chunksize: int = 65_536,
+    data_provenance: str = "real_nasa_csm_local",
 ) -> Dict[str, Any]:
-    """Execute end-to-end raw ZIP / CSV audit and write JSON, CSV, and Markdown outputs."""
+    """Execute end-to-end raw ZIP / CSV audit and write manifest, JSON, CSV, and Markdown outputs."""
     data_dir.mkdir(parents=True, exist_ok=True)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -553,9 +568,11 @@ def run_raw_audit(
 
     archive_records: List[Dict[str, Any]] = []
     file_audits: List[Dict[str, Any]] = []
+    input_format = "empty"
 
     # 1. Inspect all ZIP archives in data_dir
     for zip_path in sorted(data_dir.glob("*.zip")):
+        input_format = "zip"
         m_sub = re.match(r"^(\d+)$", zip_path.stem)
         zip_subject_id = int(m_sub.group(1)) if m_sub else None
         rec: Dict[str, Any] = {
@@ -569,7 +586,7 @@ def run_raw_audit(
         try:
             with zipfile.ZipFile(zip_path, "r") as zf:
                 csv_members = [m for m in zf.namelist() if m.lower().endswith(".csv") and not m.startswith("__MACOSX")]
-                rec["members"] = csv_members
+                rec["members"] = sorted(csv_members)
                 for member in sorted(csv_members):
                     sid, sess = parse_csv_identity(member, fallback_subject_id=zip_subject_id)
                     with zf.open(member, "r") as raw_bin:
@@ -589,26 +606,70 @@ def run_raw_audit(
     # 2. Also inspect standalone CSVs if user already unzipped archives directly in data_dir
     if not archive_records:
         for csv_path in sorted(data_dir.rglob("*.csv")):
+            input_format = "csv"
+            rel_name = str(csv_path.relative_to(data_dir)).replace("\\", "/")
             sid, sess = parse_csv_identity(csv_path.name)
-            with csv_path.open("r", encoding="utf-8", errors="replace") as f:
-                audit = audit_csv_stream(
-                    f,
-                    source_name=str(csv_path.relative_to(data_dir)),
-                    subject_id=sid,
-                    session_type=sess,
-                    chunksize=chunksize,
-                )
-                file_audits.append(audit)
+            rec = {
+                "filename": rel_name,
+                "subject_id": sid,
+                "bytes": csv_path.stat().st_size,
+                "sha256": sha256_file(csv_path),
+                "members": [rel_name],
+                "error": None,
+            }
+            try:
+                with csv_path.open("r", encoding="utf-8", errors="replace") as f:
+                    audit = audit_csv_stream(
+                        f,
+                        source_name=rel_name,
+                        subject_id=sid,
+                        session_type=sess,
+                        chunksize=chunksize,
+                    )
+                    file_audits.append(audit)
+            except Exception as exc:  # noqa: BLE001
+                rec["error"] = f"{type(exc).__name__}: {exc}"
+            archive_records.append(rec)
 
     gate_summary = evaluate_stop_conditions(archive_records, file_audits)
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # Machine-readable enforceable audit manifest required by run_benchmark.py
+    audit_manifest: Dict[str, Any] = {
+        "schema_version": AUDIT_MANIFEST_SCHEMA_VERSION,
+        "generated_at_utc": generated_at,
+        "data_provenance": data_provenance,
+        "input_format": input_format,
+        "input_archives": [
+            {
+                "filename": r["filename"],
+                "subject_id": r["subject_id"],
+                "bytes": r["bytes"],
+                "sha256": r["sha256"],
+                "csv_members": list(r["members"]),
+                "error": r["error"],
+            }
+            for r in sorted(archive_records, key=lambda item: str(item["filename"]))
+        ],
+        "n_subjects_audited": gate_summary["n_subjects_audited"],
+        "n_crews_audited": gate_summary["n_crews_audited"],
+        "crews_with_4class_loft": list(gate_summary["crews_with_4class_loft"]),
+        "gate_verdict": gate_summary["overall_gate_verdict"],
+        "gates": gate_summary["gates"],
+    }
+
+    manifest_path = out_dir / AUDIT_MANIFEST_FILENAME
+    manifest_path.write_text(json.dumps(audit_manifest, indent=2), encoding="utf-8")
 
     report = {
-        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at_utc": generated_at,
         "data_dir": str(data_dir),
+        "data_provenance": data_provenance,
         "download_log": download_log,
         "missing_subject_probes": missing_probes,
         "archives": archive_records,
         "gate_summary": gate_summary,
+        "audit_manifest": audit_manifest,
         "file_audits": file_audits,
     }
 
@@ -681,11 +742,144 @@ def run_raw_audit(
         "",
         "## Next Step",
         "",
+        f"- Machine-readable manifest written to `{AUDIT_MANIFEST_FILENAME}`.",
         "- Review `audit_summary_files.csv` and `audit_class_distribution.csv`.",
-        "- If all gates pass (`READY_FOR_BENCHMARK_PHASE`), proceed with crew-grouped baseline benchmarking via `python -m csm.run_benchmark`.",
+        "- Only if all gates pass (`READY_FOR_BENCHMARK_PHASE`), run crew-grouped benchmarking via "
+        f"`python -m csm.run_benchmark --data-dir {data_dir} --audit-manifest {out_dir / AUDIT_MANIFEST_FILENAME}`.",
     ])
     (out_dir / "audit_report.md").write_text("\n".join(md_lines) + "\n", encoding="utf-8")
     return report
+
+
+def verify_audit_manifest(
+    manifest_path: Path,
+    data_dir: Path,
+) -> Dict[str, Any]:
+    """
+    Enforce raw-data audit manifest integrity before any scientifically-valid
+    benchmark execution on local real data.
+
+    Raises AuditManifestError if:
+        - manifest_path is missing or not valid JSON
+        - schema_version, provenance, or required fields are invalid
+        - gate_verdict is not 'READY_FOR_BENCHMARK_PHASE' (refuses REVIEW / STOP)
+        - any required gate is missing or does not have status == 'PASS'
+        - data_dir archive set or SHA-256 checksums do not match the manifest
+    """
+    if not manifest_path or not manifest_path.is_file():
+        raise AuditManifestError(
+            f"Audit manifest not found: {manifest_path}. Run `python -m csm.audit_raw_data` first."
+        )
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        raise AuditManifestError(
+            f"Audit manifest is malformed JSON ({manifest_path}): {type(exc).__name__}: {exc}"
+        ) from exc
+
+    if not isinstance(manifest, dict):
+        raise AuditManifestError("Audit manifest root must be a JSON object.")
+
+    if manifest.get("schema_version") != AUDIT_MANIFEST_SCHEMA_VERSION:
+        raise AuditManifestError(
+            f"Unsupported audit manifest schema_version: {manifest.get('schema_version')!r} "
+            f"(expected {AUDIT_MANIFEST_SCHEMA_VERSION!r})."
+        )
+
+    if not isinstance(manifest.get("generated_at_utc"), str) or not manifest["generated_at_utc"].strip():
+        raise AuditManifestError("Audit manifest missing valid 'generated_at_utc'.")
+
+    provenance = manifest.get("data_provenance")
+    if provenance != "real_nasa_csm_local":
+        raise AuditManifestError(
+            f"Audit manifest data_provenance must be 'real_nasa_csm_local' for scientifically valid "
+            f"benchmarking, got {provenance!r}."
+        )
+
+    verdict = manifest.get("gate_verdict")
+    if verdict != "READY_FOR_BENCHMARK_PHASE":
+        raise AuditManifestError(
+            f"Refusing scientifically-valid benchmark: audit manifest gate_verdict is {verdict!r} "
+            "(must be 'READY_FOR_BENCHMARK_PHASE'; REVIEW and STOP verdicts are blocked)."
+        )
+
+    gates = manifest.get("gates")
+    if not isinstance(gates, dict):
+        raise AuditManifestError("Audit manifest missing 'gates' object.")
+
+    for gate_name in REQUIRED_AUDIT_GATES:
+        gate = gates.get(gate_name)
+        if not isinstance(gate, dict) or gate.get("status") != "PASS":
+            status = gate.get("status") if isinstance(gate, dict) else "MISSING"
+            detail = gate.get("detail") if isinstance(gate, dict) else "Gate entry missing"
+            raise AuditManifestError(
+                f"Audit gate '{gate_name}' did not PASS (status={status!r}): {detail}"
+            )
+
+    input_archives = manifest.get("input_archives")
+    if not isinstance(input_archives, list) or len(input_archives) == 0:
+        raise AuditManifestError("Audit manifest must list at least one verified input archive.")
+
+    if not data_dir.is_dir():
+        raise AuditManifestError(f"Data directory does not exist: {data_dir}")
+
+    input_format = manifest.get("input_format", "zip")
+    if input_format not in ("zip", "csv"):
+        raise AuditManifestError(f"Invalid audit manifest input_format: {input_format!r}")
+
+    expected_checksums: Dict[str, str] = {}
+    for entry in input_archives:
+        if not isinstance(entry, dict):
+            raise AuditManifestError("Audit manifest 'input_archives' contains a non-object entry.")
+        fname = entry.get("filename")
+        digest = entry.get("sha256")
+        if not isinstance(fname, str) or not fname.strip():
+            raise AuditManifestError("Audit manifest archive entry missing valid 'filename'.")
+        if not isinstance(digest, str) or not _SHA256_RE.match(digest):
+            raise AuditManifestError(f"Audit manifest archive '{fname}' has invalid SHA-256 digest.")
+        if entry.get("error") is not None:
+            raise AuditManifestError(f"Audit manifest archive '{fname}' recorded an audit error: {entry['error']}")
+        expected_checksums[fname] = digest
+
+    # Inspect actual files in data_dir and verify exact set + exact SHA-256 match
+    if input_format == "zip":
+        actual_files = {p.name: p for p in sorted(data_dir.glob("*.zip"))}
+    else:
+        actual_files = {
+            str(p.relative_to(data_dir)).replace("\\", "/"): p
+            for p in sorted(data_dir.rglob("*.csv"))
+        }
+
+    expected_names = set(expected_checksums.keys())
+    actual_names = set(actual_files.keys())
+
+    missing_files = sorted(expected_names - actual_names)
+    if missing_files:
+        raise AuditManifestError(
+            f"Data directory is missing audited archive(s): {missing_files[:5]}"
+        )
+
+    extra_files = sorted(actual_names - expected_names)
+    if extra_files:
+        raise AuditManifestError(
+            f"Data directory contains un-audited archive(s) not listed in manifest: {extra_files[:5]}"
+        )
+
+    for fname in sorted(expected_names):
+        actual_digest = sha256_file(actual_files[fname])
+        if actual_digest != expected_checksums[fname]:
+            raise AuditManifestError(
+                f"SHA-256 checksum mismatch for '{fname}': manifest={expected_checksums[fname]}, "
+                f"actual={actual_digest}. Re-run `python -m csm.audit_raw_data`."
+            )
+
+    return {
+        "manifest": manifest,
+        "manifest_sha256": sha256_file(manifest_path),
+        "verified_archive_count": len(expected_checksums),
+        "verified_archive_checksums": expected_checksums,
+    }
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

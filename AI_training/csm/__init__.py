@@ -25,8 +25,18 @@ from .constants import (
     subject_to_seat,
 )
 
+from .contract import (
+    CSM_DISCLAIMER,
+    CSM_SCHEMA_VERSION,
+    build_csm_response,
+    error_csm_response,
+    verify_model_validation_artifact,
+)
+
 __all__ = [
     "CLASS_TO_INDEX",
+    "CSM_DISCLAIMER",
+    "CSM_SCHEMA_VERSION",
     "EEG_CHANNELS",
     "EXPECTED_COLUMNS",
     "FORBIDDEN_FEATURE_COLUMNS",
@@ -37,6 +47,9 @@ __all__ = [
     "RAW_EVENT_TO_CLASS",
     "SIGNAL_CHANNELS",
     "TARGET_CLASSES",
+    "build_csm_response",
+    "error_csm_response",
     "subject_to_crew_id",
     "subject_to_seat",
+    "verify_model_validation_artifact",
 ]

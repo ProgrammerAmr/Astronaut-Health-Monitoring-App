@@ -6,13 +6,16 @@ Forest, Regularized GBDT) models across audited formulations (multiclass,
 binary_per_state, hierarchical) and modality ablations (full, exclude_frontal_eog,
 wearable ecg+resp).
 
-Strict provenance rule:
-    - Real benchmark runs require a local NASA CSM directory (`--data-dir`) that
-      has passed `csm.audit_raw_data`.
+Strict provenance & audit enforcement rule:
+    - Real benchmark runs (`--data-dir`) STRICTLY REQUIRE a verified
+      `--audit-manifest` JSON emitted by `csm.audit_raw_data` whose gate verdict
+      is `READY_FOR_BENCHMARK_PHASE` and whose archive SHA-256 checksums match
+      the evaluated directory. Missing, malformed, failed (`REVIEW`/`STOP`), or
+      mismatched manifests are refused.
     - `--smoke-test-synthetic` generates mathematically synthetic waveforms ONLY
-      to verify end-to-end code integrity; its JSON report is hard-tagged with
-      `"data_provenance": "synthetic_pipeline_smoke_test"` and
-      `"scientifically_valid": false`.
+      to verify end-to-end pipeline mechanics; its JSON report is hard-tagged
+      with `"data_provenance": "synthetic"`, `"run_mode": "synthetic_pipeline_smoke_test"`,
+      `"scientifically_valid": false`, and `"model_validated": false`.
 """
 
 from __future__ import annotations
@@ -21,6 +24,7 @@ import argparse
 import io
 import json
 import re
+import sys
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,7 +33,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from .audit_raw_data import parse_csv_identity
+from .audit_raw_data import AuditManifestError, parse_csv_identity, verify_audit_manifest
 from .constants import (
     BENCHMARK_SESSIONS,
     EEG_CHANNELS,
@@ -380,9 +384,174 @@ def evaluate_candidate_on_protocol(
     }
 
 
+def run_benchmark_suite(
+    *,
+    data_dir: Optional[Path] = None,
+    audit_manifest: Optional[Path] = None,
+    smoke_test_synthetic: bool = False,
+    protocol: ProtocolName = "protocol_a_zeroshot",
+    ablation: Literal["full", "no_frontal_eog", "wearable_ecg_resp"] = "full",
+    seed: int = 42,
+    out_file: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """
+    Execute the DEC-001 benchmark suite with strict audit-manifest enforcement.
+
+    Raises AuditManifestError if a real-data run lacks a valid, passed,
+    checksum-matching raw-data audit manifest.
+    """
+    if (data_dir is None) == (not smoke_test_synthetic):
+        raise ValueError("Specify exactly ONE of data_dir (real local NASA data) or smoke_test_synthetic=True.")
+
+    if ablation == "full":
+        modalities: Tuple[str, ...] = ("eeg", "ecg", "resp", "gsr")
+        exclude_frontal = False
+    elif ablation == "no_frontal_eog":
+        modalities = ("eeg", "ecg", "resp", "gsr")
+        exclude_frontal = True
+    else:
+        modalities = ("ecg", "resp")
+        exclude_frontal = False
+
+    audit_meta: Dict[str, Any] = {
+        "audit_manifest_path": None,
+        "audit_manifest_sha256": None,
+        "audit_gate_verdict": None,
+        "verified_archive_checksums": None,
+    }
+    warnings: List[str] = []
+
+    if smoke_test_synthetic:
+        train_cfg = FeatureConfig(
+            fast_window_sec=4.0,
+            slow_window_sec=10.0,
+            stride_sec=4.0,
+            minority_stride_sec=2.0,
+            modalities=modalities,
+            exclude_frontal_eog=exclude_frontal,
+        )
+        eval_cfg = FeatureConfig(
+            fast_window_sec=4.0,
+            slow_window_sec=10.0,
+            stride_sec=2.0,
+            modalities=modalities,
+            exclude_frontal_eog=exclude_frontal,
+        )
+        recs = generate_synthetic_smoke_dataset(seed=seed)
+        feat_parts, meta_parts = [], []
+        for (sid, sess), df in recs.items():
+            is_tr = sess in BENCHMARK_SESSIONS
+            f_df, m_df = extract_session_features(
+                df,
+                subject_id=sid,
+                session_type=sess,
+                config=train_cfg if is_tr else eval_cfg,
+                is_training=is_tr,
+                source_file=f"synthetic_{sid}_{sess}",
+            )
+            feat_parts.append(f_df)
+            meta_parts.append(m_df)
+        features_df = pd.concat(feat_parts, ignore_index=True)
+        meta_df = pd.concat(meta_parts, ignore_index=True)
+        provenance = "synthetic"
+        run_mode = "synthetic_pipeline_smoke_test"
+        scientifically_valid = False
+        n_outer = 1
+        warnings.append(
+            "Synthetic pipeline mechanics smoke test only; scientifically invalid for model-performance claims."
+        )
+    else:
+        assert data_dir is not None
+        if audit_manifest is None:
+            raise AuditManifestError(
+                "Refusing scientifically-valid real-data benchmark without --audit-manifest. "
+                "Run `python -m csm.audit_raw_data` first and pass its generated audit_manifest.json."
+            )
+        verified = verify_audit_manifest(audit_manifest, data_dir)
+        manifest = verified["manifest"]
+
+        train_cfg = FeatureConfig(
+            fast_window_sec=5.0,
+            slow_window_sec=30.0,
+            stride_sec=5.0,
+            minority_stride_sec=1.0,
+            modalities=modalities,
+            exclude_frontal_eog=exclude_frontal,
+        )
+        eval_cfg = FeatureConfig(
+            fast_window_sec=5.0,
+            slow_window_sec=30.0,
+            stride_sec=1.0,
+            modalities=modalities,
+            exclude_frontal_eog=exclude_frontal,
+        )
+        features_df, meta_df = extract_dataset_from_dir(
+            data_dir,
+            train_config=train_cfg,
+            eval_config=eval_cfg,
+        )
+        provenance = "real_nasa_csm_local"
+        run_mode = "audited_real_data_benchmark"
+        scientifically_valid = True
+        n_outer = 2
+        audit_meta = {
+            "audit_manifest_path": str(audit_manifest),
+            "audit_manifest_sha256": verified["manifest_sha256"],
+            "audit_gate_verdict": manifest["gate_verdict"],
+            "verified_archive_checksums": verified["verified_archive_checksums"],
+        }
+
+    candidates: List[Tuple[ModelName, FormulationName]] = [
+        ("dummy_majority", "multiclass"),
+        ("logreg_balanced", "multiclass"),
+        ("rf_balanced", "multiclass"),
+        ("gbdt_balanced", "multiclass"),
+        ("rf_balanced", "binary_per_state"),
+        ("rf_balanced", "hierarchical"),
+    ]
+
+    runs = []
+    for m_name, form in candidates:
+        res = evaluate_candidate_on_protocol(
+            features_df,
+            meta_df,
+            model_name=m_name,
+            formulation=form,
+            protocol=protocol,
+            n_outer_test_crews=n_outer,
+            seed=seed,
+        )
+        runs.append(res)
+
+    output = {
+        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "data_provenance": provenance,
+        "run_mode": run_mode,
+        "scientifically_valid": scientifically_valid,
+        "model_validated": False,  # Requires explicit owner review & documented sign-off
+        "owner_signoff_recorded": False,
+        **audit_meta,
+        "ablation": ablation,
+        "protocol": protocol,
+        "warnings": warnings,
+        "runs": runs,
+    }
+
+    if out_file is not None:
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        out_file.write_text(json.dumps(output, indent=2), encoding="utf-8")
+    return output
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="DEC-001 Crew-Grouped Cognitive State Benchmark Runner")
     parser.add_argument("--data-dir", type=Path, default=None, help="Local directory with real NASA CSM ZIP/CSV files")
+    parser.add_argument(
+        "--audit-manifest",
+        type=Path,
+        default=None,
+        help="Required for --data-dir: path to audit_manifest.json emitted by csm.audit_raw_data",
+    )
     parser.add_argument(
         "--smoke-test-synthetic",
         action="store_true",
@@ -405,111 +574,25 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if (args.data_dir is None) == (not args.smoke_test_synthetic):
         parser.error("Specify exactly ONE of --data-dir (real local NASA data) or --smoke-test-synthetic.")
 
-    if args.ablation == "full":
-        modalities = ("eeg", "ecg", "resp", "gsr")
-        exclude_frontal = False
-    elif args.ablation == "no_frontal_eog":
-        modalities = ("eeg", "ecg", "resp", "gsr")
-        exclude_frontal = True
-    else:
-        modalities = ("ecg", "resp")
-        exclude_frontal = False
-
-    if args.smoke_test_synthetic:
-        train_cfg = FeatureConfig(
-            fast_window_sec=4.0,
-            slow_window_sec=10.0,
-            stride_sec=4.0,
-            minority_stride_sec=2.0,
-            modalities=modalities,
-            exclude_frontal_eog=exclude_frontal,
-        )
-        eval_cfg = FeatureConfig(
-            fast_window_sec=4.0,
-            slow_window_sec=10.0,
-            stride_sec=2.0,
-            modalities=modalities,
-            exclude_frontal_eog=exclude_frontal,
-        )
-        recs = generate_synthetic_smoke_dataset(seed=args.seed)
-        feat_parts, meta_parts = [], []
-        for (sid, sess), df in recs.items():
-            is_tr = sess in BENCHMARK_SESSIONS
-            f_df, m_df = extract_session_features(
-                df,
-                subject_id=sid,
-                session_type=sess,
-                config=train_cfg if is_tr else eval_cfg,
-                is_training=is_tr,
-                source_file=f"synthetic_{sid}_{sess}",
-            )
-            feat_parts.append(f_df)
-            meta_parts.append(m_df)
-        features_df = pd.concat(feat_parts, ignore_index=True)
-        meta_df = pd.concat(meta_parts, ignore_index=True)
-        provenance = "synthetic_pipeline_smoke_test"
-        scientifically_valid = False
-        n_outer = 1
-    else:
-        train_cfg = FeatureConfig(
-            fast_window_sec=5.0,
-            slow_window_sec=30.0,
-            stride_sec=5.0,
-            minority_stride_sec=1.0,
-            modalities=modalities,
-            exclude_frontal_eog=exclude_frontal,
-        )
-        eval_cfg = FeatureConfig(
-            fast_window_sec=5.0,
-            slow_window_sec=30.0,
-            stride_sec=1.0,
-            modalities=modalities,
-            exclude_frontal_eog=exclude_frontal,
-        )
-        features_df, meta_df = extract_dataset_from_dir(
-            args.data_dir,
-            train_config=train_cfg,
-            eval_config=eval_cfg,
-        )
-        provenance = "real_nasa_csm_local"
-        scientifically_valid = True
-        n_outer = 2
-
-    candidates: List[Tuple[ModelName, FormulationName]] = [
-        ("dummy_majority", "multiclass"),
-        ("logreg_balanced", "multiclass"),
-        ("rf_balanced", "multiclass"),
-        ("gbdt_balanced", "multiclass"),
-        ("rf_balanced", "binary_per_state"),
-        ("rf_balanced", "hierarchical"),
-    ]
-
-    runs = []
-    for m_name, form in candidates:
-        res = evaluate_candidate_on_protocol(
-            features_df,
-            meta_df,
-            model_name=m_name,
-            formulation=form,
+    try:
+        output = run_benchmark_suite(
+            data_dir=args.data_dir,
+            audit_manifest=args.audit_manifest,
+            smoke_test_synthetic=args.smoke_test_synthetic,
             protocol=args.protocol,
-            n_outer_test_crews=n_outer,
+            ablation=args.ablation,
             seed=args.seed,
+            out_file=args.out_file,
         )
-        runs.append(res)
+    except AuditManifestError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
 
-    output = {
-        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "data_provenance": provenance,
-        "scientifically_valid": scientifically_valid,
-        "model_validated": False,  # Requires explicit owner review against acceptance criteria
-        "ablation": args.ablation,
-        "protocol": args.protocol,
-        "runs": runs,
-    }
-
-    args.out_file.parent.mkdir(parents=True, exist_ok=True)
-    args.out_file.write_text(json.dumps(output, indent=2), encoding="utf-8")
-    print(f"Benchmark complete ({provenance}, scientifically_valid={scientifically_valid}). Saved: {args.out_file}")
+    print(
+        f"Benchmark complete (provenance={output['data_provenance']}, "
+        f"run_mode={output['run_mode']}, scientifically_valid={output['scientifically_valid']}). "
+        f"Saved: {args.out_file}"
+    )
     return 0
 
 

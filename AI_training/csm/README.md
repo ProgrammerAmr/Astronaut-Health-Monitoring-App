@@ -14,8 +14,9 @@ This package isolates DEC-001 biomedical signal processing and evaluation from t
 | `features.py` | Strictly causal dual-scale windowing (`5 s` fast + `30 s` slow context), EEG spectral bands + NASA Engagement Index + Hjorth, ECG/HRV, Respiration rate, GSR SCL/SCR + drop score, plus `exclude_frontal_eog` and `ecg+resp` ablations |
 | `evaluation.py` | Runtime anti-leakage assertions (`assert_no_leakage`), Crew-Grouped Outer Test Vault + Dev LOCO CV, causal initial-baseline normalization, validation-only Temperature Scaling, per-class PR-AUC/F1/Confusion Matrix/ECE, and LOFT episode recall + FAR/hr |
 | `models.py` | Tier 0 (`dummy_majority`, `logreg_balanced`) and Tier 1 (`rf_balanced`, `gbdt_balanced`) wrappers across `multiclass`, `binary_per_state`, and `hierarchical` formulations |
-| `contract.py` | OrbitCare-aligned non-diagnostic JSON contract enforcing `INSUFFICIENT_DATA` abstention on low SQI and `model_status.validated: false` |
-| `run_benchmark.py` | End-to-end crew-grouped benchmark CLI for local real NASA CSM data + strictly tagged `--smoke-test-synthetic` verification mode |
+| `contract.py` | OrbitCare-aligned non-diagnostic JSON contract enforcing `INSUFFICIENT_DATA` abstention on low SQI and rejecting untrusted `model_validated=true` claims unless backed by a verified real-data evaluation artifact |
+| `service.py` | Isolated FastAPI router (`/csm/status`, `/csm/analyze`) mounted by `AI_training/ai_service.py` without altering existing `/health` or `/analyze`; rejects `live_sensor` & raw signal uploads, never persists raw signals, never invents probabilities |
+| `run_benchmark.py` | End-to-end crew-grouped benchmark CLI enforcing verified `--audit-manifest` checksums for real NASA data + strictly tagged `--smoke-test-synthetic` mode (`data_provenance="synthetic"`, `scientifically_valid=false`) |
 
 ## Quickstart
 
@@ -26,9 +27,9 @@ source .venv/bin/activate
 pip install -r AI_training/csm/requirements-csm.txt
 ```
 
-### 2. Run Automated Tests (Existing OrbitCare + DEC-001 Package)
+### 2. Run Automated Tests (Existing OrbitCare + DEC-001 Package + FastAPI Service)
 ```bash
-pytest -q AI_training/test_nasa_claude.py AI_training/csm/tests/test_csm_pipeline.py
+pytest -q AI_training/test_nasa_claude.py AI_training/csm/tests/test_csm_pipeline.py AI_training/csm/tests/test_csm_service.py
 ```
 
 ### 3. Run Mandatory Gate 1 Local Raw-Data Audit (Unrestricted Machine)
@@ -39,11 +40,13 @@ PYTHONPATH=AI_training python -m csm.audit_raw_data \
   --data-dir data/external/nasa_csm/raw \
   --out-dir audit_outputs/nasa_csm
 ```
+This emits `audit_outputs/nasa_csm/audit_manifest.json` (schema version, timestamp, SHA-256 checksums, gate verdict, gate details, and provenance).
 
-### 4. Run Crew-Grouped Baseline Benchmark (Only After Gate 1 Passes)
+### 4. Run Crew-Grouped Baseline Benchmark (Requires Passed Audit Manifest)
 ```bash
 PYTHONPATH=AI_training python -m csm.run_benchmark \
   --data-dir data/external/nasa_csm/raw \
+  --audit-manifest audit_outputs/nasa_csm/audit_manifest.json \
   --protocol protocol_a_zeroshot \
   --ablation full \
   --out-file csm_artifacts/benchmark_protocol_a_full.json

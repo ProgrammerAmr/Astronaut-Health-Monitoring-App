@@ -514,6 +514,180 @@ def test_orbitcare_contract_abstains_on_low_sqi_and_enforces_non_diagnostic_fiel
 
 
 # ---------------------------------------------------------------------------
+# 8. Governance Defenses: Enforceable Audit Manifest & Untrusted Validation
+# ---------------------------------------------------------------------------
+def test_untrusted_model_validated_is_rejected_without_verified_artifact(tmp_path: Path):
+    # 1. Bare model_validated=True with no artifact -> REJECTED
+    resp_bare = build_csm_response(
+        astronaut_id="crew-5",
+        session_id="loft-1",
+        window_end_sec=20.0,
+        data_provenance="real_nasa_csm_replay",
+        signal_quality={"valid": True, "sqi_score": 0.95, "reasons": []},
+        probabilities={"Baseline": 0.7, "CA": 0.1, "DA": 0.1, "SS": 0.1},
+        model_validated=True,
+    )
+    assert resp_bare["status"] == "ERROR"
+    assert resp_bare["errors"][0]["code"] == "UNTRUSTED_VALIDATION_CLAIM"
+    assert resp_bare["model_status"]["validated"] is False
+    assert resp_bare["prediction"]["abstained"] is True
+
+    # 2. Synthetic evaluation artifact cannot validate a model -> REJECTED
+    bad_art = tmp_path / "synthetic_eval.json"
+    bad_art.write_text(json.dumps({
+        "scientifically_valid": False,
+        "data_provenance": "synthetic",
+        "audit_gate_verdict": "READY_FOR_BENCHMARK_PHASE",
+        "audit_manifest_sha256": "a" * 64,
+        "owner_signoff_recorded": True,
+        "owner_signoff_reference": "DEC-001-REVIEW",
+        "runs": [{"outer_test_calibrated": {"macro_f1": 0.5}}],
+    }), encoding="utf-8")
+    resp_syn_art = build_csm_response(
+        astronaut_id="crew-5",
+        session_id="loft-1",
+        window_end_sec=20.0,
+        data_provenance="real_nasa_csm_replay",
+        signal_quality={"valid": True, "sqi_score": 0.95, "reasons": []},
+        probabilities={"Baseline": 0.7, "CA": 0.1, "DA": 0.1, "SS": 0.1},
+        model_validated=True,
+        validation_artifact_path=bad_art,
+    )
+    assert resp_syn_art["status"] == "ERROR"
+    assert resp_syn_art["errors"][0]["code"] == "UNTRUSTED_VALIDATION_CLAIM"
+    assert resp_syn_art["model_status"]["validated"] is False
+
+    # 3. Real-data artifact without owner sign-off -> REJECTED
+    unsigned_art = tmp_path / "unsigned_eval.json"
+    unsigned_art.write_text(json.dumps({
+        "scientifically_valid": True,
+        "data_provenance": "real_nasa_csm_local",
+        "audit_gate_verdict": "READY_FOR_BENCHMARK_PHASE",
+        "audit_manifest_sha256": "b" * 64,
+        "owner_signoff_recorded": False,
+        "runs": [{"outer_test_calibrated": {"macro_f1": 0.65}}],
+    }), encoding="utf-8")
+    resp_unsigned = build_csm_response(
+        astronaut_id="crew-5",
+        session_id="loft-1",
+        window_end_sec=20.0,
+        data_provenance="real_nasa_csm_replay",
+        signal_quality={"valid": True, "sqi_score": 0.95, "reasons": []},
+        probabilities={"Baseline": 0.7, "CA": 0.1, "DA": 0.1, "SS": 0.1},
+        model_validated=True,
+        validation_artifact_path=unsigned_art,
+    )
+    assert resp_unsigned["status"] == "ERROR"
+    assert resp_unsigned["errors"][0]["code"] == "UNTRUSTED_VALIDATION_CLAIM"
+    assert resp_unsigned["model_status"]["validated"] is False
+
+    # 4. Complete auditable real-data artifact still rejected if request provenance is synthetic
+    good_art = tmp_path / "verified_eval.json"
+    good_art.write_text(json.dumps({
+        "scientifically_valid": True,
+        "data_provenance": "real_nasa_csm_local",
+        "audit_gate_verdict": "READY_FOR_BENCHMARK_PHASE",
+        "audit_manifest_sha256": "c" * 64,
+        "owner_signoff_recorded": True,
+        "owner_signoff_reference": "ADR-DEC-001-SIGNED",
+        "runs": [{"outer_test_calibrated": {"macro_f1": 0.65}}],
+    }), encoding="utf-8")
+    resp_syn_req = build_csm_response(
+        astronaut_id="crew-5",
+        session_id="loft-1",
+        window_end_sec=20.0,
+        data_provenance="synthetic",
+        signal_quality={"valid": True, "sqi_score": 0.95, "reasons": []},
+        probabilities={"Baseline": 0.7, "CA": 0.1, "DA": 0.1, "SS": 0.1},
+        model_validated=True,
+        validation_artifact_path=good_art,
+    )
+    assert resp_syn_req["status"] == "ERROR"
+    assert resp_syn_req["errors"][0]["code"] == "UNTRUSTED_VALIDATION_CLAIM"
+    assert resp_syn_req["model_status"]["validated"] is False
+
+
+def test_audit_manifest_enforcement_blocks_missing_review_stop_malformed_and_mismatched(tmp_path: Path):
+    from csm.audit_raw_data import AUDIT_MANIFEST_FILENAME, AuditManifestError, verify_audit_manifest
+    from csm.run_benchmark import run_benchmark_suite
+
+    data_dir = tmp_path / "raw"
+    out_dir = tmp_path / "audit_out"
+    data_dir.mkdir()
+
+    for sid in (5, 6, 9, 10):
+        _write_subject_zip(data_dir / f"{sid}.zip", sid, include_all_loft_classes=True, inject_stray_3=False)
+
+    # Audit emits audit_manifest.json with schema_version, checksums, verdict, provenance
+    run_raw_audit(data_dir=data_dir, out_dir=out_dir, chunksize=128)
+    manifest_path = out_dir / AUDIT_MANIFEST_FILENAME
+    assert manifest_path.exists()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["schema_version"] == "1.0-dec001-audit-manifest"
+    assert manifest["data_provenance"] == "real_nasa_csm_local"
+    assert len(manifest["input_archives"]) == 4
+    assert all(len(a["sha256"]) == 64 for a in manifest["input_archives"])
+    # Only 4/17 subjects -> verdict is REVISE_OR_OWNER_REVIEW
+    assert manifest["gate_verdict"] == "REVISE_OR_OWNER_REVIEW"
+
+    # 1. Benchmark refuses real data without --audit-manifest
+    with pytest.raises(AuditManifestError, match="without --audit-manifest"):
+        run_benchmark_suite(data_dir=data_dir, audit_manifest=None)
+
+    # 2. Benchmark refuses REVIEW manifest verdict
+    with pytest.raises(AuditManifestError, match="REVISE_OR_OWNER_REVIEW"):
+        run_benchmark_suite(data_dir=data_dir, audit_manifest=manifest_path)
+
+    # CLI also exits with status 2 on refused manifest
+    rc_refused = benchmark_main([
+        "--data-dir", str(data_dir),
+        "--audit-manifest", str(manifest_path),
+        "--out-file", str(tmp_path / "should_not_exist.json"),
+    ])
+    assert rc_refused == 2
+    assert not (tmp_path / "should_not_exist.json").exists()
+
+    # 3. Malformed JSON manifest refused
+    bad_json = tmp_path / "bad_manifest.json"
+    bad_json.write_text("{not-valid-json", encoding="utf-8")
+    with pytest.raises(AuditManifestError, match="malformed JSON"):
+        verify_audit_manifest(bad_json, data_dir)
+
+    # 4. STOP verdict refused
+    stop_manifest = tmp_path / "stop_manifest.json"
+    stop_payload = dict(manifest, gate_verdict="STOP_CONDITION_TRIGGERED")
+    stop_manifest.write_text(json.dumps(stop_payload), encoding="utf-8")
+    with pytest.raises(AuditManifestError, match="STOP_CONDITION_TRIGGERED"):
+        verify_audit_manifest(stop_manifest, data_dir)
+
+    # 5. Synthesize a PASS manifest to test checksum tampering & extra archive detection
+    pass_payload = dict(
+        manifest,
+        gate_verdict="READY_FOR_BENCHMARK_PHASE",
+        gates={k: {"status": "PASS", "detail": "ok"} for k in manifest["gates"]},
+    )
+    pass_manifest = tmp_path / "pass_manifest.json"
+    pass_manifest.write_text(json.dumps(pass_payload), encoding="utf-8")
+
+    # Exact match passes verification
+    verified = verify_audit_manifest(pass_manifest, data_dir)
+    assert verified["verified_archive_count"] == 4
+    assert len(verified["manifest_sha256"]) == 64
+
+    # Extra un-audited ZIP breaks verification
+    _write_subject_zip(data_dir / "11.zip", 11, include_all_loft_classes=True)
+    with pytest.raises(AuditManifestError, match="un-audited archive"):
+        verify_audit_manifest(pass_manifest, data_dir)
+    (data_dir / "11.zip").unlink()
+
+    # Tampering with an archive file breaks SHA-256 checksum verification
+    with (data_dir / "5.zip").open("ab") as f:
+        f.write(b"tampered")
+    with pytest.raises(AuditManifestError, match="SHA-256 checksum mismatch"):
+        verify_audit_manifest(pass_manifest, data_dir)
+
+
+# ---------------------------------------------------------------------------
 # 9. End-to-End Synthetic Smoke-Test Benchmark CLI
 # ---------------------------------------------------------------------------
 def test_benchmark_cli_smoke_test_provenance_and_execution(tmp_path: Path):
@@ -531,9 +705,11 @@ def test_benchmark_cli_smoke_test_provenance_and_execution(tmp_path: Path):
     ])
     assert rc == 0
     payload = json.loads(out_json.read_text(encoding="utf-8"))
-    assert payload["data_provenance"] == "synthetic_pipeline_smoke_test"
+    assert payload["data_provenance"] == "synthetic"
+    assert payload["run_mode"] == "synthetic_pipeline_smoke_test"
     assert payload["scientifically_valid"] is False
     assert payload["model_validated"] is False
+    assert payload["audit_manifest_sha256"] is None
     assert len(payload["runs"]) == 6
     for run in payload["runs"]:
         assert 0.0 <= run["outer_test_calibrated"]["macro_f1"] <= 1.0

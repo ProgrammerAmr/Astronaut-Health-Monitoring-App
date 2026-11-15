@@ -295,15 +295,19 @@ class _CognitiveStateResearchCardState
   }
 
   List<String> _effectiveLimitations() {
+    List<String> raw;
     final fromStatus = _snapshot.serviceStatus?.limitations;
-    if (fromStatus != null && fromStatus.isNotEmpty) {
-      return fromStatus;
-    }
     final fromModel = _snapshot.analysis?.modelStatus.cohortLimitations;
-    if (fromModel != null && fromModel.isNotEmpty) {
-      return fromModel;
+    if (fromStatus != null && fromStatus.isNotEmpty) {
+      raw = fromStatus;
+    } else if (fromModel != null && fromModel.isNotEmpty) {
+      raw = fromModel;
+    } else {
+      raw = kCsmDefaultLimitations;
     }
-    return kCsmDefaultLimitations;
+    final filtered =
+        raw.where((item) => item.trim() != kCsmResearchDisclaimer).toList();
+    return filtered.isNotEmpty ? filtered : kCsmDefaultLimitations;
   }
 
   Widget _buildStateContent() {

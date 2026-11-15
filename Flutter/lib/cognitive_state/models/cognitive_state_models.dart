@@ -4,7 +4,6 @@ const String kCsmResearchDisclaimer =
 const String kCsmSyntheticDemoLabel = 'Synthetic demo data';
 
 const List<String> kCsmDefaultLimitations = <String>[
-  'Experimental research prototype — not a medical diagnosis or flight-certified system.',
   'No trained or validated CSM model artifact is currently shipped; research replay abstains safely with INSUFFICIENT_DATA.',
   'NASA SHARP-1 cohort comprises 100% male commercial airline pilots in a 1g simulator; not validated on astronauts or microgravity physiology.',
   'Live-sensor inference is disabled until an approved signal schema, physical units, sampling rate, and verified model artifact exist.',

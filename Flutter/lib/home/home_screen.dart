@@ -1107,14 +1107,16 @@ class _AlertCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _SmallTag(
                 label: alert.severity.toUpperCase(),
                 bgColor: _severityBg(alert.severity),
                 fgColor: _severityFg(alert.severity),
               ),
-              const SizedBox(width: 8),
               _SmallTag(
                 label: alert.isRead ? 'READ' : 'UNREAD',
                 bgColor: alert.isRead
@@ -1122,7 +1124,6 @@ class _AlertCard extends StatelessWidget {
                     : const Color(0xFFDCEBFF),
                 fgColor: alert.isRead ? AppColors.grey : AppColors.navy,
               ),
-              const Spacer(),
               Text(
                 formatOrbitTimestamp(alert.createdAt),
                 style: const TextStyle(fontSize: 11, color: AppColors.grey),

@@ -65,6 +65,16 @@ class _OrbitCareAppState extends State<OrbitCareApp> {
           fontFamily: 'Roboto',
         ),
         initialRoute: widget.initialRoute,
+        onGenerateInitialRoutes: (String initialRouteName) {
+          final builder = AppRoutes.routes[initialRouteName] ??
+              AppRoutes.routes[AppRoutes.splash]!;
+          return <Route<dynamic>>[
+            MaterialPageRoute<void>(
+              builder: builder,
+              settings: RouteSettings(name: initialRouteName),
+            ),
+          ];
+        },
         routes: AppRoutes.routes,
       ),
     );

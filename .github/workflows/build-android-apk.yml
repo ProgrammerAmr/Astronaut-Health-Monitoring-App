@@ -264,34 +264,37 @@ jobs:
           emulator-boot-timeout: 300
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            set -euo pipefail
+            set -eu
             APK="/tmp/orbitcare-emulator-verify/${{ needs.build-signed-apk.outputs.apk_filename }}"
             PKG="com.orbitcare.astronauthealth"
 
             echo "=== Installing signed release APK ==="
-            adb install -r "$APK"
+            if ! adb install -r "$APK"; then
+              echo "::error::adb install failed for $APK"
+              exit 1
+            fi
 
             echo "=== Verifying package installation ==="
-            adb shell pm list packages | grep -q "package:${PKG}" || {
+            if ! adb shell pm list packages | grep -q "package:${PKG}"; then
               echo "::error::Package ${PKG} not found after adb install"
               exit 1
-            }
+            fi
 
             echo "=== Cold launch #1 ==="
             adb logcat -c
             adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
             sleep 10
 
-            PID1=$(adb shell pidof "$PKG" | tr -d '\r' || true)
+            PID1=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
             echo "Running PID (launch #1): ${PID1:-NONE}"
             if [ -z "$PID1" ]; then
-              adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 50
+              adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
               echo "::error::OrbitCare process exited unexpectedly on launch #1"
               exit 1
             fi
 
             if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
-              adb logcat -d -s AndroidRuntime:E | tail -n 50
+              adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
               echo "::error::Fatal AndroidRuntime crash detected on launch #1"
               exit 1
             fi
@@ -306,16 +309,16 @@ jobs:
             adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
             sleep 8
 
-            PID2=$(adb shell pidof "$PKG" | tr -d '\r' || true)
+            PID2=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
             echo "Running PID (launch #2): ${PID2:-NONE}"
             if [ -z "$PID2" ]; then
-              adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 50
+              adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
               echo "::error::OrbitCare process exited unexpectedly on launch #2"
               exit 1
             fi
 
             if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
-              adb logcat -d -s AndroidRuntime:E | tail -n 50
+              adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
               echo "::error::Fatal AndroidRuntime crash detected on launch #2"
               exit 1
             fi

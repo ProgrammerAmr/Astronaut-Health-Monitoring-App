@@ -9,6 +9,7 @@ import '../auth/signup_screen.dart';
 import '../auth/forgot_password_screen.dart';
 import '../auth/otp_screen.dart';
 import '../auth/reset_password_screen.dart';
+import '../home/home_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String otp = '/otp';
   static const String resetPassword = '/reset-password';
+  static const String home = '/home';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -27,5 +29,6 @@ class AppRoutes {
     forgotPassword: (context) => const ForgotPasswordScreen(),
     otp: (context) => const OtpScreen(),
     resetPassword: (context) => const ResetPasswordScreen(),
+    home: (context) => const HomeScreen(),
   };
 }

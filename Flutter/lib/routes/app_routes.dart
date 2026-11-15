@@ -9,6 +9,7 @@ import '../home/add_measurement_screen.dart';
 import '../home/home_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/splash_screen.dart';
+import '../settings/connection_settings_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -20,6 +21,7 @@ class AppRoutes {
   static const String resetPassword = '/reset-password';
   static const String home = '/home';
   static const String addMeasurement = '/measurements/add';
+  static const String connectionSettings = '/settings/connection';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -31,5 +33,6 @@ class AppRoutes {
     resetPassword: (context) => const ResetPasswordScreen(),
     home: (context) => const HomeScreen(),
     addMeasurement: (context) => const AddMeasurementScreen(),
+    connectionSettings: (context) => const ConnectionSettingsScreen(),
   };
 }

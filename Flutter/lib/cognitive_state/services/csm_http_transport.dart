@@ -1,5 +1,4 @@
-import 'csm_http_transport_stub.dart'
-    if (dart.library.io) 'csm_http_transport_io.dart' as platform_transport;
+import 'csm_http_transport_http.dart' as platform_transport;
 
 class CsmHttpResponse {
   final int statusCode;
@@ -21,5 +20,10 @@ abstract class CsmHttpTransport {
   });
 }
 
+/// Default transport for every platform (mobile, desktop **and web**).
+///
+/// Previously this resolved to a `dart:io` implementation with a stub that
+/// threw `UnsupportedError` on Flutter Web, which made every login attempt
+/// fail in a browser. The `package:http` based transport works everywhere.
 CsmHttpTransport createDefaultCsmTransport() =>
     platform_transport.createPlatformCsmTransport();

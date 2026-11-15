@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "doctor": "node scripts/doctor.js",
+    "doctor:fix": "node scripts/doctor.js --fix",
     "seed:demo": "node src/scripts/seedDemo.js",
     "test": "node --test tests/*.test.js"
   },

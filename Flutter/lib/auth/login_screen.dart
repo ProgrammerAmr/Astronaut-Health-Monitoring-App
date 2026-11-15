@@ -5,6 +5,7 @@ import '../constants/app_widgets.dart';
 import '../core/models/orbitcare_models.dart';
 import '../core/state/session_controller.dart';
 import '../routes/app_routes.dart';
+import '../settings/backend_connection_bar.dart';
 import 'auth_status_banner.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSendingVerifyOtp = false;
   bool _showVerifyEmailAction = false;
+  bool _showConnectionAction = false;
   String? _errorMessage;
   String? _infoNotice;
   bool _checkedNotice = false;
@@ -32,7 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
       _checkedNotice = true;
       final notice = SessionScope.maybeOf(context)?.consumeNotice();
       if (notice != null && notice.trim().isNotEmpty) {
-        _infoNotice = notice;
+        if (_looksLikeConnectionProblem(notice)) {
+          // Surface splash/startup connectivity failures with a direct fix path.
+          _errorMessage = notice;
+          _showConnectionAction = true;
+        } else {
+          _infoNotice = notice;
+        }
       }
     }
   }
@@ -42,6 +50,16 @@ class _LoginScreenState extends State<LoginScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  bool _looksLikeConnectionProblem(String message) {
+    final text = message.toLowerCase();
+    return text.contains('unable to reach') ||
+        text.contains('timed out') ||
+        text.contains('timeout') ||
+        text.contains('not configured') ||
+        text.contains('backend') ||
+        text.contains('connection');
   }
 
   bool _isValidEmail(String email) {
@@ -56,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter a valid email address.';
         _showVerifyEmailAction = false;
+        _showConnectionAction = false;
       });
       return;
     }
@@ -64,6 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter your password.';
         _showVerifyEmailAction = false;
+        _showConnectionAction = false;
       });
       return;
     }
@@ -81,6 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
       _infoNotice = null;
       _showVerifyEmailAction = false;
+      _showConnectionAction = false;
     });
 
     try {
@@ -96,11 +117,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = e.message;
         _showVerifyEmailAction = e.isUnverified;
+        _showConnectionAction = e.isNetworkError || e.isConfigError;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Unable to sign in right now. Please try again.';
+        _showConnectionAction = true;
       });
     } finally {
       if (mounted) {
@@ -109,6 +132,18 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
+  }
+
+  Future<void> _openConnectionSettings() async {
+    await Navigator.pushNamed(context, AppRoutes.connectionSettings);
+    if (!mounted) return;
+    // The backend URL may have changed: clear a stale connection error.
+    setState(() {
+      if (_showConnectionAction) {
+        _errorMessage = null;
+        _showConnectionAction = false;
+      }
+    });
   }
 
   Future<void> _sendVerificationOtpAndOpen() async {
@@ -147,9 +182,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final apiConfigured =
-        SessionScope.maybeOf(context)?.apiClient.isConfigured ?? false;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -181,15 +213,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 24),
-              if (!apiConfigured) ...[
-                const AuthStatusBanner(
-                  isError: false,
-                  message:
-                      'Backend URL not set. Run with --dart-define=ORBITCARE_API_BASE_URL=http://10.0.2.2:5000 (Android emulator) or http://localhost:5000.',
-                ),
-                const SizedBox(height: 16),
-              ],
+              const SizedBox(height: 20),
+              BackendConnectionBar(onTap: _openConnectionSettings),
+              const SizedBox(height: 16),
               if (_infoNotice != null) ...[
                 AuthStatusBanner(
                   isError: false,
@@ -214,7 +240,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : 'Send Verification OTP',
                           ),
                         )
-                      : null,
+                      : (_showConnectionAction
+                          ? TextButton.icon(
+                              onPressed: _openConnectionSettings,
+                              icon: const Icon(Icons.settings_ethernet,
+                                  size: 18),
+                              label: const Text('Open Connection Settings'),
+                            )
+                          : null),
                 ),
                 const SizedBox(height: 16),
               ],

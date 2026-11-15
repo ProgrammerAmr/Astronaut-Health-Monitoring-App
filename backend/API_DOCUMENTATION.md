@@ -23,6 +23,36 @@ The backend provides APIs for:
 | Local computer | `http://localhost:5000/api` |
 | Android Emulator | `http://10.0.2.2:5000/api` |
 | Physical Android device | `http://YOUR_COMPUTER_LAN_IP:5000/api` |
+| iOS simulator / desktop / web | `http://localhost:5000/api` |
+
+**Health check (no auth):** `GET /api/health`
+
+```json
+{
+  "success": true,
+  "message": "OrbitCare API is running",
+  "status": "ok",
+  "database": "connected",
+  "environment": "development",
+  "version": "1.0.0",
+  "uptimeSeconds": 42
+}
+```
+
+`database` reflects the Mongoose connection state (`connected`, `disconnected`,
+`connecting`, `disconnecting`). The Flutter app's **Backend Connection** screen
+probes this endpoint; if it answers with 404 something other than OrbitCare is
+listening on that port.
+
+**Connecting the mobile app**
+
+- The startup banner printed by `npm run dev` lists every usable URL, including
+  this machine's LAN IPs.
+- `npm run doctor` (inside `backend/`) verifies Node, `.env`, MongoDB, the port
+  and prints the exact `flutter run --dart-define=...` command per device.
+- The app itself can change/test its backend URL at runtime: Login screen ->
+  **Backend Connection**.
+- See `docs/CONNECTION_TROUBLESHOOTING.md` when a client cannot connect.
 
 Replace `YOUR_COMPUTER_LAN_IP` with the computer's local IP address when testing on a physical device.
 
@@ -255,7 +285,25 @@ All endpoints in this section require authentication.
 
 Headers: Authorization required.
 
-Returns the authenticated user's profile.
+Returns the authenticated user's profile. The profile is nested under
+`data.user` (the mobile client unwraps this; do not flatten it without updating
+`OrbitCareApiClient.getMe`):
+
+```json
+{
+  "status": "success",
+  "data": {
+    "user": {
+      "_id": "507f1f77bcf86cd799439055",
+      "name": "Nova Lin",
+      "email": "nova@example.test",
+      "role": "astronaut",
+      "isVerified": true,
+      "mission": { "name": "...", "role": "...", "status": "..." }
+    }
+  }
+}
+```
 
 ### 5.2 Update Current User Profile
 

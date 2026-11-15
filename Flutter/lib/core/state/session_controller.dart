@@ -67,7 +67,8 @@ class SessionController extends ChangeNotifier {
       if (!apiClient.isConfigured) {
         _session = null;
         _sessionNotice =
-            'Backend URL is not configured. Launch with --dart-define=ORBITCARE_API_BASE_URL=<url>.';
+            'Backend URL is not configured. Open Settings -> Backend Connection '
+            'in the app, or launch with --dart-define=ORBITCARE_API_BASE_URL=<url>.';
         return false;
       }
 

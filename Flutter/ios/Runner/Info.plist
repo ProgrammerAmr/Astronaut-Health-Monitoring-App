@@ -26,6 +26,19 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Local development only: the OrbitCare API is served over plain HTTP from
+	     the developer machine (http://localhost:5000 or http://<LAN-IP>:5000).
+	     iOS App Transport Security blocks that by default, which shows up in the
+	     app as "Unable to reach the OrbitCare backend server".
+	     For a production/TestFlight build remove NSAllowsArbitraryLoads and use
+	     HTTPS with NSExceptionDomains instead. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

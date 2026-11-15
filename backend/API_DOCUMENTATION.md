@@ -108,12 +108,13 @@ Success response:
   "user": {
     "id": "USER_ID",
     "name": "Test Astronaut",
-    "email": "astronaut@example.com"
+    "email": "astronaut@example.com",
+    "role": "astronaut"
   }
 }
 ```
 
-The user must verify their email before logging in.
+The user must verify their email before logging in. Unverified accounts receive HTTP `403`.
 
 ### 4.3 Send OTP
 
@@ -167,7 +168,8 @@ Success response for signup:
   "user": {
     "id": "USER_ID",
     "name": "Test Astronaut",
-    "email": "astronaut@example.com"
+    "email": "astronaut@example.com",
+    "role": "astronaut"
   }
 }
 ```
@@ -209,7 +211,37 @@ Success response:
 }
 ```
 
-Password must contain at least 8 characters.
+Password must contain at least 8 characters. Failed OTP attempts are tracked and capped at 5 attempts.
+
+### 4.6 Logout
+
+**POST** `/auth/logout`
+
+Headers: Authorization required (`Bearer <JWT>`).
+
+Acknowledges client sign-out for the authenticated session (the client discards its locally stored JWT token).
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+### Local Synthetic Demo Seed
+
+For local hackathon demonstrations (non-production, clearly labeled synthetic data only, zero real personal data):
+
+```bash
+cd backend
+npm run seed:demo
+```
+
+This creates or refreshes the local synthetic astronaut account (`demo.astronaut@orbitcare.local`), 5 synthetic measurements (`source: "imported"`), and 2 synthetic non-CSM demonstration alerts.
 
 ---
 

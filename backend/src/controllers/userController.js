@@ -12,21 +12,63 @@ const getMe = async (req, res) => {
 // Update profile
 const updateMe = async (req, res) => {
   try {
-    const { name, email, avatarUrl, mission, preferences } = req.body;
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const { name, email, avatarUrl, mission, preferences } = body;
 
     const updates = {};
 
-    if (name !== undefined) updates.name = name.trim();
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim() || name.trim().length > 120) {
+        return res.status(400).json({
+          status: "fail",
+          message: "name must be a non-empty string up to 120 characters",
+        });
+      }
+      updates.name = name.trim();
+    }
 
     if (email !== undefined) {
+      if (
+        typeof email !== "string" ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+      ) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Please provide a valid email address",
+        });
+      }
       updates.email = email.toLowerCase().trim();
     }
 
-    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+    if (avatarUrl !== undefined) {
+      if (avatarUrl !== null && typeof avatarUrl !== "string") {
+        return res.status(400).json({
+          status: "fail",
+          message: "avatarUrl must be a string URL or null",
+        });
+      }
+      updates.avatarUrl = avatarUrl;
+    }
 
-    if (mission !== undefined) updates.mission = mission;
+    if (mission !== undefined) {
+      if (!mission || typeof mission !== "object" || Array.isArray(mission)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "mission must be an object",
+        });
+      }
+      updates.mission = mission;
+    }
 
-    if (preferences !== undefined) updates.preferences = preferences;
+    if (preferences !== undefined) {
+      if (!preferences || typeof preferences !== "object" || Array.isArray(preferences)) {
+        return res.status(400).json({
+          status: "fail",
+          message: "preferences must be an object",
+        });
+      }
+      updates.preferences = preferences;
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({

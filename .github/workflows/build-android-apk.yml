@@ -32,11 +32,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v5
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -94,12 +94,20 @@ jobs:
         env:
           API_BASE_URL: ${{ github.event.inputs.api_base_url || '' }}
         run: |
-          set -euo pipefail
+          set +e
           if [ -n "$API_BASE_URL" ]; then
-            flutter build apk --release --dart-define="ORBITCARE_API_BASE_URL=$API_BASE_URL"
+            output=$(flutter build apk --release --dart-define="ORBITCARE_API_BASE_URL=$API_BASE_URL" 2>&1)
           else
-            flutter build apk --release
+            output=$(flutter build apk --release 2>&1)
           fi
+          status=$?
+          echo "$output"
+          if [ $status -ne 0 ]; then
+            echo "$output" | grep -E "FAILURE:|What went wrong:|> |Error:|Exception:|error:" | head -n 10 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+          fi
+          exit $status
 
       - name: Verify APK cryptographic signature & compute SHA-256
         run: |

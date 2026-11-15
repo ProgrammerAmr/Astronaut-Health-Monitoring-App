@@ -1,279 +1,237 @@
-
 import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_widgets.dart';
+import '../core/models/orbitcare_models.dart';
+import '../core/state/session_controller.dart';
 import '../routes/app_routes.dart';
+import 'auth_status_banner.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final ResetPasswordRouteArgs? initialArgs;
+
+  const ResetPasswordScreen({
+    super.key,
+    this.initialArgs,
+  });
 
   @override
-  State<ResetPasswordScreen> createState() =>
-      _ResetPasswordScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState
-    extends State<ResetPasswordScreen> {
-  final passwordController = TextEditingController();
-  final confirmController = TextEditingController();
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
-  bool get hasLength => passwordController.text.length >= 8;
-  bool get hasUppercase =>
-      RegExp(r'[A-Z]').hasMatch(passwordController.text);
-  bool get hasNumber =>
-      RegExp(r'[0-9]').hasMatch(passwordController.text);
-  bool get hasSymbol =>
-      RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(
-        passwordController.text,
-      );
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  ResetPasswordRouteArgs? _resolveArgs(BuildContext context) {
+    if (widget.initialArgs != null) return widget.initialArgs!;
+    final raw = ModalRoute.of(context)?.settings.arguments;
+    if (raw is ResetPasswordRouteArgs) return raw;
+    return null;
+  }
 
   @override
   void dispose() {
     passwordController.dispose();
-    confirmController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Widget requirement(String text, bool valid) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(
-            valid ? Icons.check_circle : Icons.circle_outlined,
-            color: valid ? AppColors.cyan : AppColors.navy,
-            size: 19,
-          ),
-          const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.navy,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Future<void> _handleReset(ResetPasswordRouteArgs? args) async {
+    final newPassword = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
 
-  void resetPassword() {
-    if (passwordController.text.isEmpty ||
-        confirmController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please complete both password fields'),
-        ),
-      );
+    if (args == null || args.email.isEmpty || args.otp.isEmpty) {
+      setState(() {
+        _errorMessage =
+            'Reset session details are missing. Please restart Forgot Password.';
+      });
       return;
     }
 
-    if (!hasLength || !hasUppercase || !hasNumber || !hasSymbol) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password does not meet requirements'),
-        ),
-      );
+    if (newPassword.length < 8) {
+      setState(() {
+        _errorMessage = 'Password must be at least 8 characters long.';
+      });
       return;
     }
 
-    if (passwordController.text != confirmController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match'),
-        ),
-      );
+    if (newPassword != confirmPassword) {
+      setState(() {
+        _errorMessage = 'Passwords do not match.';
+      });
       return;
     }
 
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      AppRoutes.login,
-      (route) => false,
-    );
+    final sessionController = SessionScope.maybeOf(context);
+    if (sessionController == null) {
+      setState(() {
+        _errorMessage = 'Session service is unavailable.';
+      });
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Password UI completed. Connect backend to save it.',
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await sessionController.apiClient.resetPassword(
+        email: args.email,
+        otp: args.otp,
+        newPassword: newPassword,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password reset successfully. Please sign in.'),
         ),
-      ),
-    );
+      );
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.login,
+        (_) => false,
+      );
+    } on OrbitCareApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Unable to reset password right now. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final args = _resolveArgs(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 25),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 20,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
-
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Reset Password',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.navy,
-                      ),
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                          },
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.navy,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(width: 48),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'OrbitCare',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.navy,
+                    ),
+                  ),
                 ],
               ),
-
-              const SizedBox(height: 25),
-
-              const Center(
-                child: Icon(
-                  Icons.verified_user,
-                  size: 65,
-                  color: AppColors.primary,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
+              const SizedBox(height: 18),
+              const Center(child: OrbitLogo(height: 85)),
+              const SizedBox(height: 22),
               const Center(
                 child: Text(
-                  '● BIOMETRIC AUTH CONFIRMED',
+                  'Reset Password',
                   style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              const Center(
-                child: Text(
-                  'Create New Password',
-                  style: TextStyle(
-                    fontSize: 25,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                     color: AppColors.navy,
                   ),
                 ),
               ),
-
-              const SizedBox(height: 45),
-
-              AppTextField(
-                label: 'New Password',
-                hint: 'Enter new password',
-                icon: Icons.lock_outline,
-                isPassword: true,
-                controller: passwordController,
+              const SizedBox(height: 10),
+              Center(
+                child: Text(
+                  args != null
+                      ? 'Create a new password for ${args.email}.'
+                      : 'Create a strong new password for your\nOrbitCare account.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: AppColors.grey,
+                    height: 1.5,
+                  ),
+                ),
               ),
-
-              const SizedBox(height: 28),
-
-              AppTextField(
-                label: 'Confirm New Password',
-                hint: 'Confirm new password',
-                icon: Icons.lock_reset_outlined,
-                isPassword: true,
-                controller: confirmController,
-              ),
-
-              const SizedBox(height: 35),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'CIPHER INTEGRITY PROTOCOL',
-                    style: TextStyle(
-                      color: AppColors.navy,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+              const SizedBox(height: 24),
+              if (_errorMessage != null) ...[
+                AuthStatusBanner(isError: true, message: _errorMessage!),
+                const SizedBox(height: 16),
+              ],
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.navy.withValues(alpha: 0.05),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
                     ),
-                  ),
-                  AnimatedBuilder(
-                    animation: passwordController,
-                    builder: (context, child) {
-                      final score = [
-                        hasLength,
-                        hasUppercase,
-                        hasNumber,
-                        hasSymbol,
-                      ].where((e) => e).length;
-
-                      final labels = [
-                        'WEAK',
-                        'FAIR',
-                        'GOOD',
-                        'STRONG',
-                        'STRONG',
-                      ];
-
-                      return Text(
-                        labels[score],
-                        style: const TextStyle(
-                          color: AppColors.teal,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    AppTextField(
+                      label: 'New Password',
+                      hint: 'Minimum 8 characters',
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                      controller: passwordController,
+                      enabled: !_isLoading,
+                    ),
+                    const SizedBox(height: 22),
+                    AppTextField(
+                      label: 'Confirm Password',
+                      hint: 'Re-enter new password',
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                      controller: confirmPasswordController,
+                      enabled: !_isLoading,
+                    ),
+                    const SizedBox(height: 28),
+                    PrimaryButton(
+                      text: 'Update Password',
+                      icon: Icons.check_circle_outline,
+                      isLoading: _isLoading,
+                      onPressed:
+                          _isLoading ? null : () => _handleReset(args),
+                    ),
+                  ],
+                ),
               ),
-
-              const SizedBox(height: 15),
-
-              AnimatedBuilder(
-                animation: passwordController,
-                builder: (context, child) {
-                  return Column(
-                    children: [
-                      requirement(
-                        'At least 8 characters',
-                        hasLength,
-                      ),
-                      requirement(
-                        'At least one uppercase letter',
-                        hasUppercase,
-                      ),
-                      requirement(
-                        'At least one number',
-                        hasNumber,
-                      ),
-                      requirement(
-                        'At least one special character',
-                        hasSymbol,
-                      ),
-                    ],
-                  );
-                },
-              ),
-
-              const SizedBox(height: 40),
-
-              PrimaryButton(
-                text: 'Reset Password',
-                icon: Icons.vpn_key_outlined,
-                onPressed: resetPassword,
-              ),
-
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
             ],
           ),
         ),

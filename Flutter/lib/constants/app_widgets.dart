@@ -23,57 +23,74 @@ class OrbitLogo extends StatelessWidget {
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final IconData? icon;
+  final bool isLoading;
 
   const PrimaryButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.icon,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 55,
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+    final disabled = onPressed == null || isLoading;
+    return Opacity(
+      opacity: disabled ? 0.65 : 1.0,
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.18),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
             ),
-            if (icon != null) ...[
-              const SizedBox(width: 10),
-              Icon(icon, size: 20),
-            ],
           ],
+        ),
+        child: ElevatedButton(
+          onPressed: disabled ? null : onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            disabledBackgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            disabledForegroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      text,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (icon != null) ...[
+                      const SizedBox(width: 10),
+                      Icon(icon, size: 20),
+                    ],
+                  ],
+                ),
         ),
       ),
     );
@@ -87,6 +104,7 @@ class AppTextField extends StatefulWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final TextEditingController? controller;
+  final bool enabled;
 
   const AppTextField({
     super.key,
@@ -96,6 +114,7 @@ class AppTextField extends StatefulWidget {
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
     this.controller,
+    this.enabled = true,
   });
 
   @override
@@ -122,6 +141,7 @@ class _AppTextFieldState extends State<AppTextField> {
         const SizedBox(height: 8),
         TextField(
           controller: widget.controller,
+          enabled: widget.enabled,
           keyboardType: widget.keyboardType,
           obscureText: widget.isPassword && obscure,
           style: const TextStyle(

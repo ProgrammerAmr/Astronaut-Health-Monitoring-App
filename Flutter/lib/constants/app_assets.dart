@@ -15,4 +15,7 @@ class AppAssets {
 
   static const String otp =
       'assets/images/otp.jpg';
+
+  static const String bodyAnatomy =
+      'assets/images/body_anatomy.png';
 }

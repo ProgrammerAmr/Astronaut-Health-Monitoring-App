@@ -22,10 +22,7 @@ class SecureSessionStorage implements SessionStorage {
   final FlutterSecureStorage _storage;
 
   SecureSessionStorage({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+      : _storage = storage ?? const FlutterSecureStorage();
 
   @override
   Future<String?> readToken() async {

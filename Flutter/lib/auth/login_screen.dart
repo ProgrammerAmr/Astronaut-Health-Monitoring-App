@@ -149,69 +149,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final sessionController = SessionScope.maybeOf(context);
     if (sessionController == null) return;
 
-    final urlController =
-        TextEditingController(text: sessionController.apiBaseUrl);
-    String? dialogError;
-
     final saved = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return AlertDialog(
-              title: const Text('Backend Server URL'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Enter your OrbitCare backend address (e.g. https://your-api.example.com or http://YOUR-LAN-IP:5000).',
-                    style: TextStyle(fontSize: 13, color: AppColors.grey),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    key: const Key('server_url_input'),
-                    controller: urlController,
-                    keyboardType: TextInputType.url,
-                    decoration: InputDecoration(
-                      labelText: 'Server URL',
-                      hintText: 'https://api.orbitcare.example',
-                      errorText: dialogError,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  key: const Key('save_server_url_btn'),
-                  onPressed: () async {
-                    try {
-                      await sessionController
-                          .updateApiBaseUrl(urlController.text);
-                      if (dialogContext.mounted) {
-                        Navigator.pop(dialogContext, true);
-                      }
-                    } on OrbitCareApiException catch (e) {
-                      setDialogState(() {
-                        dialogError = e.message;
-                      });
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => _ServerUrlDialog(sessionController: sessionController),
     );
 
-    urlController.dispose();
     if (saved == true && mounted) {
       setState(() {
         _errorMessage = null;
@@ -422,6 +364,103 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ServerUrlDialog extends StatefulWidget {
+  final SessionController sessionController;
+
+  const _ServerUrlDialog({required this.sessionController});
+
+  @override
+  State<_ServerUrlDialog> createState() => _ServerUrlDialogState();
+}
+
+class _ServerUrlDialogState extends State<_ServerUrlDialog> {
+  late final TextEditingController _urlController;
+  String? _dialogError;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController =
+        TextEditingController(text: widget.sessionController.apiBaseUrl);
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _saving = true;
+      _dialogError = null;
+    });
+    try {
+      await widget.sessionController.updateApiBaseUrl(_urlController.text);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } on OrbitCareApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _dialogError = e.message;
+        _saving = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _dialogError = 'Unable to save server URL.';
+        _saving = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      scrollable: true,
+      title: const Text('Backend Server URL'),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your OrbitCare backend address (e.g. https://your-api.example.com or http://YOUR-LAN-IP:5000).',
+              style: TextStyle(fontSize: 13, color: AppColors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('server_url_input'),
+              controller: _urlController,
+              enabled: !_saving,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: 'Server URL',
+                hintText: 'https://api.orbitcare.example',
+                errorText: _dialogError,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          key: const Key('save_server_url_btn'),
+          onPressed: _saving ? null : _save,
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

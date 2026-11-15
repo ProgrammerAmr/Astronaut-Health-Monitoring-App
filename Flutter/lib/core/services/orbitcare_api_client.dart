@@ -20,6 +20,14 @@ class OrbitCareApiClient {
 
   bool get isConfigured => isValidApiBaseUrl(baseUrl);
 
+  OrbitCareApiClient withBaseUrl(String newBaseUrl) {
+    return OrbitCareApiClient(
+      baseUrl: newBaseUrl,
+      timeout: timeout,
+      transport: _transport,
+    );
+  }
+
   CognitiveStateApiClient createCognitiveStateClient() {
     return CognitiveStateApiClient(
       baseUrl: baseUrl,

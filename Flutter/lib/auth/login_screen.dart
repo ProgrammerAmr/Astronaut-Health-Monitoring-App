@@ -145,10 +145,86 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _showServerUrlDialog() async {
+    final sessionController = SessionScope.maybeOf(context);
+    if (sessionController == null) return;
+
+    final urlController =
+        TextEditingController(text: sessionController.apiBaseUrl);
+    String? dialogError;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              title: const Text('Backend Server URL'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enter your OrbitCare backend address (e.g. https://your-api.example.com or http://YOUR-LAN-IP:5000).',
+                    style: TextStyle(fontSize: 13, color: AppColors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('server_url_input'),
+                    controller: urlController,
+                    keyboardType: TextInputType.url,
+                    decoration: InputDecoration(
+                      labelText: 'Server URL',
+                      hintText: 'https://api.orbitcare.example',
+                      errorText: dialogError,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  key: const Key('save_server_url_btn'),
+                  onPressed: () async {
+                    try {
+                      await sessionController
+                          .updateApiBaseUrl(urlController.text);
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext, true);
+                      }
+                    } on OrbitCareApiException catch (e) {
+                      setDialogState(() {
+                        dialogError = e.message;
+                      });
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    urlController.dispose();
+    if (saved == true && mounted) {
+      setState(() {
+        _errorMessage = null;
+        _infoNotice = 'Backend server set to ${sessionController.apiBaseUrl}';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final apiConfigured =
-        SessionScope.maybeOf(context)?.apiClient.isConfigured ?? false;
+    final sessionController = SessionScope.maybeOf(context);
+    final apiConfigured = sessionController?.apiClient.isConfigured ?? false;
+    final activeBaseUrl = sessionController?.apiBaseUrl ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -160,7 +236,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 15),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: const Key('configure_server_url_btn'),
+                  onPressed: _isLoading ? null : _showServerUrlDialog,
+                  icon: Icon(
+                    apiConfigured ? Icons.cloud_done_outlined : Icons.settings,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                  label: Text(
+                    apiConfigured ? 'Server Settings' : 'Configure Server URL',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
               const OrbitLogo(height: 95),
               const SizedBox(height: 18),
               const Text(
@@ -183,12 +277,26 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
               if (!apiConfigured) ...[
-                const AuthStatusBanner(
+                AuthStatusBanner(
                   isError: false,
                   message:
-                      'Backend URL not set. Run with --dart-define=ORBITCARE_API_BASE_URL=http://10.0.2.2:5000 (Android emulator) or http://localhost:5000.',
+                      'Backend URL is not configured yet. Tap "Configure Server URL" above to connect to your OrbitCare backend.',
+                  action: TextButton.icon(
+                    onPressed: _isLoading ? null : _showServerUrlDialog,
+                    icon: const Icon(Icons.dns_outlined, size: 18),
+                    label: const Text('Set Server URL'),
+                  ),
                 ),
                 const SizedBox(height: 16),
+              ] else if (activeBaseUrl.isNotEmpty && _infoNotice == null) ...[
+                Text(
+                  'Server: $activeBaseUrl',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.grey,
+                  ),
+                ),
+                const SizedBox(height: 12),
               ],
               if (_infoNotice != null) ...[
                 AuthStatusBanner(

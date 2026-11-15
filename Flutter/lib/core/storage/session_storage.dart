@@ -10,6 +10,9 @@ abstract class SessionStorage {
   Future<String?> readUserJson();
   Future<void> writeUserJson(String userJson);
 
+  Future<String?> readApiBaseUrl();
+  Future<void> writeApiBaseUrl(String? url);
+
   Future<void> clear();
 }
 
@@ -18,6 +21,7 @@ abstract class SessionStorage {
 class SecureSessionStorage implements SessionStorage {
   static const String _tokenKey = 'orbitcare_auth_jwt';
   static const String _userKey = 'orbitcare_auth_user_json';
+  static const String _apiBaseUrlKey = 'orbitcare_api_base_url';
 
   final FlutterSecureStorage _storage;
 
@@ -82,6 +86,35 @@ class SecureSessionStorage implements SessionStorage {
   }
 
   @override
+  Future<String?> readApiBaseUrl() async {
+    try {
+      final url = await _storage.read(key: _apiBaseUrlKey);
+      if (url == null || url.trim().isEmpty) return null;
+      return url.trim();
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> writeApiBaseUrl(String? url) async {
+    try {
+      final trimmed = url?.trim() ?? '';
+      if (trimmed.isEmpty) {
+        await _storage.delete(key: _apiBaseUrlKey);
+      } else {
+        await _storage.write(key: _apiBaseUrlKey, value: trimmed);
+      }
+    } on MissingPluginException {
+      // Ignore in headless environment.
+    } on PlatformException {
+      // Ignore platform storage failures gracefully.
+    }
+  }
+
+  @override
   Future<void> clear() async {
     try {
       await _storage.delete(key: _tokenKey);
@@ -98,10 +131,15 @@ class SecureSessionStorage implements SessionStorage {
 class InMemorySessionStorage implements SessionStorage {
   String? _token;
   String? _userJson;
+  String? _apiBaseUrl;
 
-  InMemorySessionStorage({String? initialToken, String? initialUserJson})
-      : _token = initialToken,
-        _userJson = initialUserJson;
+  InMemorySessionStorage({
+    String? initialToken,
+    String? initialUserJson,
+    String? initialApiBaseUrl,
+  })  : _token = initialToken,
+        _userJson = initialUserJson,
+        _apiBaseUrl = initialApiBaseUrl;
 
   @override
   Future<String?> readToken() async =>
@@ -123,6 +161,18 @@ class InMemorySessionStorage implements SessionStorage {
   @override
   Future<void> writeUserJson(String userJson) async {
     _userJson = userJson;
+  }
+
+  @override
+  Future<String?> readApiBaseUrl() async =>
+      (_apiBaseUrl == null || _apiBaseUrl!.trim().isEmpty)
+          ? null
+          : _apiBaseUrl!.trim();
+
+  @override
+  Future<void> writeApiBaseUrl(String? url) async {
+    final trimmed = url?.trim() ?? '';
+    _apiBaseUrl = trimmed.isEmpty ? null : trimmed;
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../cognitive_state/services/cognitive_state_api_client.dart';
+import '../config/api_config.dart';
 import '../models/orbitcare_models.dart';
 import '../services/orbitcare_api_client.dart';
 import '../storage/session_storage.dart';
@@ -8,8 +9,8 @@ import '../storage/session_storage.dart';
 /// Holds authenticated OrbitCare user state, persists JWT via [SessionStorage],
 /// and exposes shared [OrbitCareApiClient] and [CognitiveStateApiClient].
 class SessionController extends ChangeNotifier {
-  final OrbitCareApiClient apiClient;
-  final CognitiveStateApiClient csmApiClient;
+  OrbitCareApiClient _apiClient;
+  CognitiveStateApiClient _csmApiClient;
   final SessionStorage _storage;
 
   AuthSession? _session;
@@ -32,11 +33,16 @@ class SessionController extends ChangeNotifier {
   }
 
   SessionController._({
-    required this.apiClient,
-    required this.csmApiClient,
+    required OrbitCareApiClient apiClient,
+    required CognitiveStateApiClient csmApiClient,
     required SessionStorage storage,
-  }) : _storage = storage;
+  })  : _apiClient = apiClient,
+        _csmApiClient = csmApiClient,
+        _storage = storage;
 
+  OrbitCareApiClient get apiClient => _apiClient;
+  CognitiveStateApiClient get csmApiClient => _csmApiClient;
+  String get apiBaseUrl => _apiClient.baseUrl;
   AuthSession? get session => _session;
   AuthUser? get user => _session?.user;
   String? get token => _session?.token;
@@ -51,27 +57,50 @@ class SessionController extends ChangeNotifier {
     return current;
   }
 
-  /// Restores a previously persisted JWT on app startup and validates it
-  /// against GET /api/users/me so expired or revoked tokens are never trusted.
+  /// Updates and persists the OrbitCare backend base URL at runtime (e.g., from
+  /// the Login screen Server Settings dialog on a physical phone APK).
+  Future<void> updateApiBaseUrl(String rawUrl) async {
+    final normalized = normalizeApiBaseUrl(rawUrl);
+    if (!isValidApiBaseUrl(normalized)) {
+      throw const OrbitCareApiException(
+        code: 'INVALID_API_BASE_URL',
+        message:
+            'Enter a valid http:// or https:// backend URL (for example http://192.168.1.10:5000).',
+      );
+    }
+    await _storage.writeApiBaseUrl(normalized);
+    _apiClient = _apiClient.withBaseUrl(normalized);
+    _csmApiClient = _apiClient.createCognitiveStateClient();
+    notifyListeners();
+  }
+
+  /// Restores any user-configured backend URL and previously persisted JWT on
+  /// app startup, validating the JWT against GET /api/users/me.
   Future<bool> restoreSession() async {
     _isRestoring = true;
     notifyListeners();
 
     try {
+      final storedApiUrl = await _storage.readApiBaseUrl();
+      if (storedApiUrl != null && isValidApiBaseUrl(storedApiUrl)) {
+        _apiClient = _apiClient.withBaseUrl(storedApiUrl);
+        _csmApiClient = _apiClient.createCognitiveStateClient();
+      }
+
       final storedToken = await _storage.readToken();
       if (storedToken == null || storedToken.isEmpty) {
         _session = null;
         return false;
       }
 
-      if (!apiClient.isConfigured) {
+      if (!_apiClient.isConfigured) {
         _session = null;
         _sessionNotice =
-            'Backend URL is not configured. Launch with --dart-define=ORBITCARE_API_BASE_URL=<url>.';
+            'Backend URL is not configured. Tap "Configure Server URL" to connect to your OrbitCare backend.';
         return false;
       }
 
-      final freshUser = await apiClient.getMe(token: storedToken);
+      final freshUser = await _apiClient.getMe(token: storedToken);
       _session = AuthSession(token: storedToken, user: freshUser);
       await _storage.writeUserJson(freshUser.toJsonString());
       _sessionNotice = null;

@@ -347,6 +347,40 @@ void main() {
       expect(resetSubmitted, isTrue);
       expect(find.text('Welcome Back'), findsOneWidget);
     });
+
+    testWidgets('LoginScreen allows configuring and persisting backend Server URL at runtime',
+        (tester) async {
+      final storage = InMemorySessionStorage();
+      final api = OrbitCareApiClient(
+        baseUrl: '',
+        transport: _MockTransport((method, uri, headers, body) async {
+          return _jsonResp(200, {'success': true});
+        }),
+      );
+      final controller = SessionController(apiClient: api, storage: storage);
+
+      await tester.pumpWidget(
+        OrbitCareApp(
+          sessionController: controller,
+          initialRoute: AppRoutes.login,
+        ),
+      );
+
+      expect(controller.apiClient.isConfigured, isFalse);
+      await tester.tap(find.byKey(const Key('configure_server_url_btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('server_url_input')),
+        'https://demo.orbitcare.example/api/',
+      );
+      await tester.tap(find.byKey(const Key('save_server_url_btn')));
+      await tester.pumpAndSettle();
+
+      expect(controller.apiClient.isConfigured, isTrue);
+      expect(controller.apiBaseUrl, 'https://demo.orbitcare.example');
+      expect(await storage.readApiBaseUrl(), 'https://demo.orbitcare.example');
+    });
   });
 
   group('Model formatting helpers', () {

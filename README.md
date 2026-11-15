@@ -139,6 +139,9 @@ An installed APK cannot take `--dart-define` at runtime, so the backend URL is b
 ```bat
 :: Windows - asks which device, detects your LAN IP, builds and offers adb install
 scripts\build_apk.bat
+
+:: Or pick the target: 1=Android APK, 2=Windows .exe, 3=Web build
+scripts\build_app.bat
 ```
 ```bash
 # macOS / Linux

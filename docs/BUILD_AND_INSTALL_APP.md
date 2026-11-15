@@ -152,6 +152,28 @@ You do not need a new APK after that: change the URL inside the app
 
 ---
 
+## 6.5) تطبيق ويندوز أو ويب / Windows desktop or Web build
+
+لو مش هتثبّت على موبايل، السكريبت ده بيبنيلك تطبيق ويندوز `.exe` أو نسخة ويب
+(تتثبّت كـ app من Chrome):
+
+If you are not installing on a phone, this builds a Windows `.exe` or a web build
+that Chrome can install as an app:
+
+```bat
+scripts\build_app.bat      :: 1=Android APK  2=Windows .exe  3=Web
+```
+
+| الناتج / Output | المسار / Path | التشغيل / Run |
+|---|---|---|
+| Windows app | `Flutter\build\windows\x64\runner\Release\` | انسخ المجلد كله وشغّل `nasa.exe` (يحتاج Visual Studio 2022 + "Desktop development with C++") |
+| Web app | `Flutter\build\web\` | `python -m http.server 8080 --directory build\web` ← `http://localhost:8080` ← Chrome: **Install app** |
+
+العنوان المناسب للنسختين دول هو `http://localhost:5000` لأن التطبيق والباك‑إند على نفس الجهاز.
+Both run on the same machine as the backend, so bake in `http://localhost:5000`.
+
+---
+
 ## 7) iOS / آيفون
 
 بناء iOS يحتاج جهاز Mac مع Xcode:

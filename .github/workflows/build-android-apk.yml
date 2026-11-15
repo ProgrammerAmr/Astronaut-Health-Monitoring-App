@@ -253,6 +253,76 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           ls -la /dev/kvm || true
 
+      - name: Prepare Android Emulator verification script
+        env:
+          APK_FILENAME: ${{ needs.build-signed-apk.outputs.apk_filename }}
+        run: |
+          cat <<'EOF' > /tmp/verify-apk.sh
+          #!/usr/bin/env bash
+          set -euo pipefail
+          APK="/tmp/orbitcare-emulator-verify/__APK_FILENAME__"
+          PKG="com.orbitcare.astronauthealth"
+
+          echo "=== Installing signed release APK: $APK ==="
+          if ! adb install -r "$APK"; then
+            echo "::error::adb install failed for $APK"
+            exit 1
+          fi
+
+          echo "=== Verifying package installation ==="
+          if ! adb shell pm list packages | grep -q "package:${PKG}"; then
+            echo "::error::Package ${PKG} not found after adb install"
+            exit 1
+          fi
+
+          echo "=== Cold launch #1 ==="
+          adb logcat -c
+          adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
+          sleep 10
+
+          PID1=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
+          echo "Running PID (launch #1): ${PID1:-NONE}"
+          if [ -z "$PID1" ]; then
+            adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::OrbitCare process exited unexpectedly on launch #1"
+            exit 1
+          fi
+
+          if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
+            adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::Fatal AndroidRuntime crash detected on launch #1"
+            exit 1
+          fi
+
+          echo "=== Focused window check ==="
+          adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | head -n 5 || true
+
+          echo "=== Cold restart (launch #2) ==="
+          adb shell am force-stop "$PKG"
+          sleep 2
+          adb logcat -c
+          adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
+          sleep 8
+
+          PID2=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
+          echo "Running PID (launch #2): ${PID2:-NONE}"
+          if [ -z "$PID2" ]; then
+            adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::OrbitCare process exited unexpectedly on launch #2"
+            exit 1
+          fi
+
+          if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
+            adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+            echo "::error::Fatal AndroidRuntime crash detected on launch #2"
+            exit 1
+          fi
+
+          echo "=== Android 14 Emulator verification PASSED (install, launch #1, restart #2, zero fatal crashes) ==="
+          EOF
+          sed -i "s|__APK_FILENAME__|${APK_FILENAME}|g" /tmp/verify-apk.sh
+          chmod +x /tmp/verify-apk.sh
+
       - name: Boot Android 14 Emulator, install APK, and verify startup & restart
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -263,67 +333,7 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 300
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            set -eu
-            APK="/tmp/orbitcare-emulator-verify/${{ needs.build-signed-apk.outputs.apk_filename }}"
-            PKG="com.orbitcare.astronauthealth"
-
-            echo "=== Installing signed release APK ==="
-            if ! adb install -r "$APK"; then
-              echo "::error::adb install failed for $APK"
-              exit 1
-            fi
-
-            echo "=== Verifying package installation ==="
-            if ! adb shell pm list packages | grep -q "package:${PKG}"; then
-              echo "::error::Package ${PKG} not found after adb install"
-              exit 1
-            fi
-
-            echo "=== Cold launch #1 ==="
-            adb logcat -c
-            adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
-            sleep 10
-
-            PID1=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
-            echo "Running PID (launch #1): ${PID1:-NONE}"
-            if [ -z "$PID1" ]; then
-              adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
-              echo "::error::OrbitCare process exited unexpectedly on launch #1"
-              exit 1
-            fi
-
-            if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
-              adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
-              echo "::error::Fatal AndroidRuntime crash detected on launch #1"
-              exit 1
-            fi
-
-            echo "=== Focused window check ==="
-            adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | head -n 5 || true
-
-            echo "=== Cold restart (launch #2) ==="
-            adb shell am force-stop "$PKG"
-            sleep 2
-            adb logcat -c
-            adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1
-            sleep 8
-
-            PID2=$(adb shell pidof "$PKG" | tr -d '\r\n' || true)
-            echo "Running PID (launch #2): ${PID2:-NONE}"
-            if [ -z "$PID2" ]; then
-              adb logcat -d -s AndroidRuntime:E flutter:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
-              echo "::error::OrbitCare process exited unexpectedly on launch #2"
-              exit 1
-            fi
-
-            if adb logcat -d | grep -E "FATAL EXCEPTION|Fatal signal" | grep -q "$PKG"; then
-              adb logcat -d -s AndroidRuntime:E | tail -n 20 | while IFS= read -r line; do echo "::error::$line"; done
-              echo "::error::Fatal AndroidRuntime crash detected on launch #2"
-              exit 1
-            fi
-
-            echo "=== Android 14 Emulator verification PASSED (install, launch #1, restart #2, zero fatal crashes) ==="
+          script: bash /tmp/verify-apk.sh
 
   publish-demo-release:
     name: Publish Verified Demo APK to GitHub Release

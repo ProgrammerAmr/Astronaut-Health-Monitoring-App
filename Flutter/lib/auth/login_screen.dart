@@ -63,6 +63,37 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleEnterDemoMode() async {
+    final sessionController = SessionScope.maybeOf(context);
+    if (sessionController == null || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await sessionController.enterDemoMode();
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+        (_) => false,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Unable to open Demo Mode right now. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
@@ -96,10 +127,10 @@ class _LoginScreenState extends State<LoginScreen> {
     await sessionController.ensureConfigLoaded();
     if (!mounted) return;
 
-    if (!sessionController.apiClient.isConfigured) {
+    if (!sessionController.isProductionApiConfigured) {
       setState(() {
         _errorMessage =
-            'Backend server URL is not configured yet. Configure and test your server connection before signing in.';
+            'Backend server URL is not configured yet. Configure your server connection, or tap "Continue as Demo User" to explore OrbitCare offline.';
         _showConfigAction = true;
         _showVerifyEmailAction = false;
       });
@@ -156,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await sessionController.apiClient.sendOtp(
+      await sessionController.productionApiClient.sendOtp(
         email: email,
         purpose: 'signup',
       );
@@ -183,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final sessionController = SessionScope.maybeOf(context);
-    final apiConfigured = sessionController?.apiClient.isConfigured ?? false;
+    final apiConfigured = sessionController?.isProductionApiConfigured ?? false;
     final activeBaseUrl = sessionController?.apiBaseUrl ?? '';
 
     return Scaffold(
@@ -354,6 +385,65 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: Icons.arrow_forward,
                       isLoading: _isLoading,
                       onPressed: _isLoading ? null : _handleLogin,
+                    ),
+                    const SizedBox(height: 14),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider(color: AppColors.border)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: AppColors.border)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        key: const Key('continue_demo_user_btn'),
+                        onPressed: _isLoading ? null : _handleEnterDemoMode,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.navy,
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.4,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.science_outlined,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                        label: const Text(
+                          'Continue as Demo User',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.navy,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Offline Demo Mode • Uses local synthetic astronaut data (no backend required)',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.grey,
+                      ),
                     ),
                   ],
                 ),

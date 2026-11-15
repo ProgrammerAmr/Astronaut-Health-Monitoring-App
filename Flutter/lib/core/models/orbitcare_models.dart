@@ -196,6 +196,13 @@ class BloodPressure {
     final dia = diastolic != null ? diastolic!.round().toString() : '--';
     return '$sys/$dia mmHg';
   }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      if (systolic != null) 'systolic': systolic,
+      if (diastolic != null) 'diastolic': diastolic,
+    };
+  }
 }
 
 class SleepInfo {
@@ -219,6 +226,13 @@ class SleepInfo {
     final hours = durationMinutes! ~/ 60;
     final mins = durationMinutes! % 60;
     return '${hours}h ${mins}m';
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      if (durationMinutes != null) 'durationMinutes': durationMinutes,
+      if (quality != null) 'quality': quality,
+    };
   }
 }
 
@@ -249,6 +263,15 @@ class ActivityInfo {
       calories != null ||
       durationMinutes != null ||
       (level != null && level!.isNotEmpty);
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      if (steps != null) 'steps': steps,
+      if (calories != null) 'calories': calories,
+      if (durationMinutes != null) 'durationMinutes': durationMinutes,
+      if (level != null) 'level': level,
+    };
+  }
 }
 
 class HealthMeasurement {
@@ -305,6 +328,24 @@ class HealthMeasurement {
       measuredAt: _toDateTime(json['measuredAt'] ?? json['createdAt']),
       source: (json['source'] ?? 'manual').toString(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      '_id': id,
+      if (heartRate != null) 'heartRate': heartRate,
+      if (pulseRate != null) 'pulseRate': pulseRate,
+      if (respiratoryRate != null) 'respiratoryRate': respiratoryRate,
+      if (spo2 != null) 'spo2': spo2,
+      if (temperature != null) 'temperature': temperature,
+      if (bloodPressure?.hasValues == true)
+        'bloodPressure': bloodPressure!.toJson(),
+      if (bloodSugar != null) 'bloodSugar': bloodSugar,
+      if (sleep?.hasValues == true) 'sleep': sleep!.toJson(),
+      if (activity?.hasValues == true) 'activity': activity!.toJson(),
+      if (measuredAt != null) 'measuredAt': measuredAt!.toUtc().toIso8601String(),
+      'source': source,
+    };
   }
 }
 
@@ -402,6 +443,17 @@ class HealthAlert {
       createdAt: createdAt,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      '_id': id,
+      'title': title,
+      'message': message,
+      'severity': severity,
+      'isRead': isRead,
+      if (createdAt != null) 'createdAt': createdAt!.toUtc().toIso8601String(),
+    };
+  }
 }
 
 class HealthReport {
@@ -476,3 +528,62 @@ String formatOrbitTimestamp(DateTime? dt) {
   final minute = local.minute.toString().padLeft(2, '0');
   return '$month $day, ${local.year} • $hour:$minute';
 }
+
+/// Formats body temperature in °C or °F according to user display preference.
+String formatOrbitTemperature(double? celsius, {bool useFahrenheit = false}) {
+  if (celsius == null) return '--';
+  if (useFahrenheit) {
+    final fahrenheit = (celsius * 9 / 5) + 32;
+    return '${fahrenheit.toStringAsFixed(1)} °F';
+  }
+  return '${celsius.toStringAsFixed(1)} °C';
+}
+
+/// Local display and Demo Mode preferences stored separately from production
+/// auth credentials.
+class DemoPreferences {
+  final bool useFahrenheit;
+  final bool autoThresholdAlerts;
+
+  const DemoPreferences({
+    this.useFahrenheit = false,
+    this.autoThresholdAlerts = true,
+  });
+
+  DemoPreferences copyWith({
+    bool? useFahrenheit,
+    bool? autoThresholdAlerts,
+  }) {
+    return DemoPreferences(
+      useFahrenheit: useFahrenheit ?? this.useFahrenheit,
+      autoThresholdAlerts: autoThresholdAlerts ?? this.autoThresholdAlerts,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'useFahrenheit': useFahrenheit,
+      'autoThresholdAlerts': autoThresholdAlerts,
+    };
+  }
+
+  String toJsonString() => jsonEncode(toJson());
+
+  static DemoPreferences tryParseJsonString(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return const DemoPreferences();
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        final map = Map<String, dynamic>.from(decoded);
+        return DemoPreferences(
+          useFahrenheit: map['useFahrenheit'] == true,
+          autoThresholdAlerts: map['autoThresholdAlerts'] != false,
+        );
+      }
+    } catch (_) {
+      // Fall back to defaults cleanly if corrupted.
+    }
+    return const DemoPreferences();
+  }
+}
+

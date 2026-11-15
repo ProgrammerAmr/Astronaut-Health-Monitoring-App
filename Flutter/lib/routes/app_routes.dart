@@ -8,6 +8,7 @@ import '../auth/server_config_screen.dart';
 import '../auth/signup_screen.dart';
 import '../home/add_measurement_screen.dart';
 import '../home/home_screen.dart';
+import '../home/profile_settings_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/splash_screen.dart';
 
@@ -22,6 +23,7 @@ class AppRoutes {
   static const String serverConfig = '/server-config';
   static const String home = '/home';
   static const String addMeasurement = '/measurements/add';
+  static const String profileSettings = '/profile-settings';
 
   static Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
@@ -34,5 +36,6 @@ class AppRoutes {
     serverConfig: (context) => const ServerConfigScreen(),
     home: (context) => const HomeScreen(),
     addMeasurement: (context) => const AddMeasurementScreen(),
+    profileSettings: (context) => const ProfileSettingsScreen(),
   };
 }

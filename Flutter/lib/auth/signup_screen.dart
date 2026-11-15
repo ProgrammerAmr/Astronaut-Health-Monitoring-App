@@ -57,6 +57,37 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
+  Future<void> _handleEnterDemoMode() async {
+    final sessionController = SessionScope.maybeOf(context);
+    if (sessionController == null || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await sessionController.enterDemoMode();
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+        (_) => false,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Unable to open Demo Mode right now. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _handleSignup() async {
     final fullName = fullNameController.text.trim();
     final email = emailController.text.trim();
@@ -106,10 +137,10 @@ class _SignupScreenState extends State<SignupScreen> {
     await sessionController.ensureConfigLoaded();
     if (!mounted) return;
 
-    if (!sessionController.apiClient.isConfigured) {
+    if (!sessionController.isProductionApiConfigured) {
       setState(() {
         _errorMessage =
-            'Backend server URL is not configured yet. Configure and test your server connection before creating an account.';
+            'Backend server URL is not configured yet. Configure your server connection, or tap "Continue as Demo User" to explore OrbitCare offline.';
         _showConfigAction = true;
       });
       return;
@@ -123,7 +154,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      await sessionController.apiClient.register(
+      await sessionController.productionApiClient.register(
         fullName: fullName,
         email: email,
         password: password,
@@ -157,7 +188,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final sessionController = SessionScope.maybeOf(context);
-    final apiConfigured = sessionController?.apiClient.isConfigured ?? false;
+    final apiConfigured = sessionController?.isProductionApiConfigured ?? false;
     final activeBaseUrl = sessionController?.apiBaseUrl ?? '';
 
     return Scaffold(
@@ -305,6 +336,38 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.arrow_forward,
                       isLoading: _isLoading,
                       onPressed: _isLoading ? null : _handleSignup,
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        key: const Key('signup_continue_demo_user_btn'),
+                        onPressed: _isLoading ? null : _handleEnterDemoMode,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.navy,
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.4,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.science_outlined,
+                          size: 19,
+                          color: AppColors.primary,
+                        ),
+                        label: const Text(
+                          'Continue as Demo User',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.navy,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

@@ -57,7 +57,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     await sessionController.ensureConfigLoaded();
     if (!mounted) return;
 
-    if (!sessionController.apiClient.isConfigured) {
+    if (!sessionController.isProductionApiConfigured) {
       setState(() {
         _errorMessage =
             'Backend server URL is not configured yet. Configure your server URL before requesting a reset code.';
@@ -73,7 +73,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      await sessionController.apiClient.sendOtp(
+      await sessionController.productionApiClient.sendOtp(
         email: email,
         purpose: 'reset_password',
       );

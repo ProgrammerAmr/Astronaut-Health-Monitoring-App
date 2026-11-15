@@ -37,6 +37,10 @@ on:
           - stable
           - beta
 
+permissions:
+  contents: read
+  issues: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.artifact }}
   cancel-in-progress: true
@@ -52,11 +56,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java 21 (AGP 9.x / Gradle 9.x toolchain)
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -64,13 +68,25 @@ jobs:
           channel: ${{ inputs.flutter_channel }}
           cache: true
 
+      - name: Accept Android SDK licenses and install platform packages
+        shell: bash
+        run: |
+          set -x
+          echo "ANDROID_HOME=${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          # Gradle needs accepted licenses to auto-download a missing platform.
+          if [ -x "$SDK/cmdline-tools/latest/bin/sdkmanager" ]; then
+            yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+            "$SDK/cmdline-tools/latest/bin/sdkmanager" "platform-tools" || true
+            "$SDK/cmdline-tools/latest/bin/sdkmanager" --list_installed || true
+          fi
+          yes | flutter doctor --android-licenses || true
+
       - name: Report toolchain
         run: |
-          flutter --version
+          java -version 2>&1 || true
+          flutter --version || true
           flutter doctor -v || true
-
-      - name: Accept Android SDK licenses
-        run: yes | flutter doctor --android-licenses || true
 
       - name: Fetch Flutter dependencies
         run: flutter pub get
@@ -78,22 +94,31 @@ jobs:
       - name: Static analysis (fail before Gradle does)
         run: flutter analyze --no-fatal-infos
 
-      - name: Build release artifact
+      - name: Use a CI-safe Gradle heap
         run: |
+          # android/gradle.properties asks for -Xmx8G, which a hosted runner may
+          # not be able to reserve. CI-only tweak; the repository is not changed.
+          sed -i 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=1G -XX:ReservedCodeCacheSize=512m/' android/gradle.properties
+          grep '^org.gradle.jvmargs' android/gradle.properties
+
+      - name: Build release artifact
+        shell: bash
+        run: |
+          set -o pipefail
+          BUILD_CMD=""
           case "${{ inputs.artifact }}" in
             apk-universal)
-              flutter build apk --release \
-                --dart-define=ORBITCARE_API_BASE_URL="${{ inputs.backend_url }}"
+              BUILD_CMD="flutter build apk --release --dart-define=ORBITCARE_API_BASE_URL=${{ inputs.backend_url }}"
               ;;
             appbundle)
-              flutter build appbundle --release \
-                --dart-define=ORBITCARE_API_BASE_URL="${{ inputs.backend_url }}"
+              BUILD_CMD="flutter build appbundle --release --dart-define=ORBITCARE_API_BASE_URL=${{ inputs.backend_url }}"
               ;;
             *)
-              flutter build apk --release --split-per-abi \
-                --dart-define=ORBITCARE_API_BASE_URL="${{ inputs.backend_url }}"
+              BUILD_CMD="flutter build apk --release --split-per-abi --dart-define=ORBITCARE_API_BASE_URL=${{ inputs.backend_url }}"
               ;;
           esac
+          echo "Running: $BUILD_CMD"
+          $BUILD_CMD 2>&1 | tee /tmp/build.log
 
       - name: List build outputs
         run: |
@@ -109,3 +134,38 @@ jobs:
             Flutter/build/app/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 30
+
+      # Maintainers cannot always open the run log (org restrictions, expired
+      # logs). On failure, publish the useful tail of the build log as an issue
+      # so it stays readable. Delete this step once the build is stable.
+      - name: Publish failure diagnostics as an issue
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "### Android build failed"
+            echo ""
+            echo "- run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- artifact: \`${{ inputs.artifact }}\`"
+            echo "- backend_url: \`${{ inputs.backend_url }}\`"
+            echo ""
+            echo "<details><summary>build log (tail)</summary>"
+            echo ""
+            echo '```'
+            tail -n 150 /tmp/build.log 2>/dev/null || echo "(no build log captured)"
+            echo '```'
+            echo "</details>"
+            echo ""
+            echo "<details><summary>flutter doctor -v</summary>"
+            echo ""
+            echo '```'
+            flutter doctor -v 2>&1 | tail -n 60 || true
+            echo '```'
+            echo "</details>"
+          } > /tmp/failure-report.md
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "APK build failed - run ${{ github.run_id }}" \
+            --body-file /tmp/failure-report.md || true

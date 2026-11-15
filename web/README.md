@@ -42,3 +42,16 @@ curl http://127.0.0.1:5000/api/health
 If Node cannot start, read its terminal output and check MongoDB and `.env`. Once the health check works, start the web server as above and register/verify or seed the demo account. `ORBITCARE_BACKEND_URL` must be reachable from the machine running Vite. For a deployed frontend, configure the hosting reverse proxy to forward `/api` to Node; Vite's development proxy does not exist in a static deployment. An HTML response at `/api` usually means the host is serving the frontend fallback instead of forwarding the API request.
 
 The AI service is separate: start it and set `CSM_AI_SERVICE_URL` to enable the experimental CSM card. Its absence does not prevent login, but will display a service-unavailable message on the card.
+
+## Explicit synthetic preview (no MongoDB)
+
+This is **not** the real backend, registration, email, or a persistent database. It is an opt-in, isolated in-memory demo API using fictional data, separate from `backend/server.js`. The browser offers a password-free demo entry and clearly labels the data. Real signup and adding measurements are disabled; use no real personal or health data. Each temporary session is isolated, expires after one hour, and is deleted on sign-out. Data also disappears on server restart. The CSM endpoints still use the real Node CSM proxy/controller and a running Python service; the service safely abstains without a validated model.
+
+For local development only, start Python as above, then in separate terminals:
+
+```sh
+cd backend && npm ci && ORBITCARE_SYNTHETIC_PREVIEW=1 CSM_AI_SERVICE_URL=http://127.0.0.1:8000 node preview/server.js
+cd web && npm ci && VITE_ORBITCARE_SYNTHETIC_DEMO=1 npm run dev
+```
+
+Without these explicit flags, the normal frontend and MongoDB backend remain unchanged. Do not enable preview on a production/public service; the preview API refuses `NODE_ENV=production` and only binds to loopback. Do not set the Vite demo flag in production builds.

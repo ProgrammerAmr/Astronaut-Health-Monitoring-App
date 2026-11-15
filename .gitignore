@@ -31,3 +31,7 @@ data/external/nasa_csm/*.csv
 Thumbs.db
 .vscode/
 .idea/
+
+# Web frontend
+web/node_modules/
+web/dist/

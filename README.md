@@ -140,3 +140,17 @@ cd Flutter && flutter pub get && flutter analyze && flutter test
 - Raw NASA physiological archive ZIPs and trained model artifacts are intentionally excluded from Git.
 - Live wearable/sensor streaming (`mode: "live_sensor"`) and raw physiological waveforms are rejected by backend validation.
 - Detailed documentation: [`backend/API_DOCUMENTATION.md`](backend/API_DOCUMENTATION.md) and [`AI_training/csm/README.md`](AI_training/csm/README.md).
+
+---
+
+## Web frontend (بديل Flutter)
+
+A standalone browser frontend is available in [`web/`](web/README.md). It connects to the existing Node API and its authenticated experimental CSM AI proxy. For local setup, start MongoDB, the Node backend, and the Python AI service as described above, then:
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+Open the URL printed by Vite. The development proxy sends same-origin `/api` requests to the backend; set `ORBITCARE_BACKEND_URL` for a different backend address. See the web README for deployment, authentication, AI limitations, and troubleshooting. This branch is based on `test` at `b4ad28b`, not the later connectivity changes merged from the linked branch into `main`.

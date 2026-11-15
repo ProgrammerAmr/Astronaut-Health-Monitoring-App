@@ -1,11 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'constants/app_colors.dart';
+import 'core/config/backend_config.dart';
 import 'core/state/session_controller.dart';
 import 'routes/app_routes.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load a previously saved backend URL (Settings -> Backend Connection)
+  // before the first frame so the splash/login screens talk to the right host.
+  await BackendConfig.instance.load();
+
   runApp(const OrbitCareApp());
 }
 
@@ -30,6 +38,10 @@ class _OrbitCareAppState extends State<OrbitCareApp> {
   @override
   void initState() {
     super.initState();
+    // Safety net for hot restarts / embeddings that do not call main().
+    if (!BackendConfig.instance.isLoaded) {
+      unawaited(BackendConfig.instance.load());
+    }
     if (widget.sessionController != null) {
       _sessionController = widget.sessionController!;
       _ownsController = false;

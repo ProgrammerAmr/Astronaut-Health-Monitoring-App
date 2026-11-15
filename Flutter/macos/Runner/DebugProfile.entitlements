@@ -8,5 +8,9 @@
 	<true/>
 	<key>com.apple.security.network.server</key>
 	<true/>
+	<!-- Without the client entitlement a sandboxed macOS app cannot open any
+	     outbound connection, so the OrbitCare backend was unreachable. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>

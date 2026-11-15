@@ -34,7 +34,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final sessionController = SessionScope.maybeOf(context);
       final notice = sessionController?.consumeNotice();
       if (notice != null && notice.trim().isNotEmpty) {
-        _infoNotice = notice;
+        if (_looksLikeConnectionProblem(notice)) {
+          _errorMessage = notice;
+          _showConfigAction = true;
+        } else {
+          _infoNotice = notice;
+        }
       }
       sessionController?.ensureConfigLoaded();
     }
@@ -45,6 +50,16 @@ class _LoginScreenState extends State<LoginScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  bool _looksLikeConnectionProblem(String message) {
+    final text = message.toLowerCase();
+    return text.contains('unable to reach') ||
+        text.contains('timed out') ||
+        text.contains('timeout') ||
+        text.contains('not configured') ||
+        text.contains('backend') ||
+        text.contains('connection');
   }
 
   bool _isValidEmail(String email) {
@@ -164,6 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Unable to sign in right now. Please try again.';
+        _showConfigAction = true;
       });
     } finally {
       if (mounted) {

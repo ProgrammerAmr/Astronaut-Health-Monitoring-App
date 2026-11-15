@@ -26,6 +26,10 @@ data/external/nasa_csm/*.zip
 data/external/nasa_csm/*.csv
 *.zip
 
+# Local run logs (e.g. `flutter run -v > log.txt`)
+log.txt
+Flutter/log.txt
+
 # OS & editor files
 .DS_Store
 Thumbs.db

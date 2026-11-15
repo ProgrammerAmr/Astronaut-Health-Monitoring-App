@@ -1,16 +1,35 @@
-/// Build-time backend configuration for OrbitCare Flutter client.
-///
-/// Provide an optional default backend URL at build/run time:
-///   flutter build apk --release --dart-define=ORBITCARE_API_BASE_URL=https://your-backend.example.com
-///
-/// Precedence rule:
-///   1. User-saved runtime Server URL persisted on-device (`ApiUrlSource.saved`)
-///   2. Optional build-time `ORBITCARE_API_BASE_URL` default (`ApiUrlSource.buildDefault`)
-///   3. Unconfigured (`ApiUrlSource.unconfigured`) — user configures via Configure Server URL.
+// Backend connection configuration for the OrbitCare Flutter client.
+//
+// Supports both:
+// - Explicit saved/build-time/unconfigured resolution (`resolveEffectiveApiBaseUrl`)
+//   used by `SessionController` and `ServerConfigScreen`, and
+// - Dynamic runtime override / platform-default resolution (`resolveApiBaseUrlDetails`)
+//   used by `BackendConfig` and `ConnectionSettingsScreen`.
+import 'package:flutter/foundation.dart';
+
+/// Build-time backend URL. Empty unless `--dart-define` provides it.
 const String kOrbitCareApiBaseUrl = String.fromEnvironment(
   'ORBITCARE_API_BASE_URL',
   defaultValue: '',
 );
+
+/// Build-time backend port used by the local development defaults below.
+const String kOrbitCareApiPort = String.fromEnvironment(
+  'ORBITCARE_API_PORT',
+  defaultValue: '5000',
+);
+
+/// Android emulators reach the host machine's loopback through this alias.
+const String kAndroidEmulatorHostAlias = '10.0.2.2';
+
+/// Host used by the default URL on iOS simulator / desktop / web.
+const String kLocalhostHost = 'localhost';
+
+/// Hook used by pure-Dart API clients to read a persisted runtime override.
+typedef RuntimeApiBaseUrlProvider = String? Function();
+
+/// Currently installed runtime override provider (may be null in tests).
+RuntimeApiBaseUrlProvider? runtimeApiBaseUrlProvider;
 
 enum ApiUrlSource {
   saved,
@@ -27,7 +46,8 @@ class ResolvedApiConfig {
     required this.source,
   });
 
-  bool get isConfigured => baseUrl.isNotEmpty && source != ApiUrlSource.unconfigured;
+  bool get isConfigured =>
+      baseUrl.isNotEmpty && source != ApiUrlSource.unconfigured;
 }
 
 /// Validates a user-entered or build-time backend base URL.
@@ -121,4 +141,85 @@ ResolvedApiConfig resolveEffectiveApiBaseUrl({
     baseUrl: '',
     source: ApiUrlSource.unconfigured,
   );
+}
+
+/// The URL a developer most likely needs on [platform] when nothing else was
+/// configured. Never empty, so the app always has something to try.
+String defaultApiBaseUrlFor({
+  bool isWeb = kIsWeb,
+  TargetPlatform? platform,
+  String? port,
+}) {
+  final requestedPort = (port ?? kOrbitCareApiPort).trim();
+  final effectivePort = requestedPort.isEmpty ? '5000' : requestedPort;
+  final effectivePlatform = platform ?? defaultTargetPlatform;
+  if (!isWeb && effectivePlatform == TargetPlatform.android) {
+    return 'http://$kAndroidEmulatorHostAlias:$effectivePort';
+  }
+  return 'http://$kLocalhostHost:$effectivePort';
+}
+
+/// Where the effective backend URL came from (shown in the in-app diagnostics).
+enum ApiBaseUrlSource {
+  runtimeOverride,
+  buildFlag,
+  platformDefault,
+}
+
+class ResolvedApiBaseUrl {
+  final String url;
+  final ApiBaseUrlSource source;
+
+  const ResolvedApiBaseUrl(this.url, this.source);
+
+  @override
+  String toString() => 'ResolvedApiBaseUrl($url, $source)';
+}
+
+/// Applies the documented resolution order and always returns a usable URL.
+ResolvedApiBaseUrl resolveApiBaseUrlDetails({
+  String? runtimeOverride,
+  bool isWeb = kIsWeb,
+  TargetPlatform? platform,
+}) {
+  final override = normalizeApiBaseUrl(
+    runtimeOverride ?? runtimeApiBaseUrlProvider?.call() ?? '',
+  );
+  if (isValidApiBaseUrl(override)) {
+    return ResolvedApiBaseUrl(override, ApiBaseUrlSource.runtimeOverride);
+  }
+
+  final fromBuildFlag = normalizeApiBaseUrl(kOrbitCareApiBaseUrl);
+  if (isValidApiBaseUrl(fromBuildFlag)) {
+    return ResolvedApiBaseUrl(fromBuildFlag, ApiBaseUrlSource.buildFlag);
+  }
+
+  return ResolvedApiBaseUrl(
+    defaultApiBaseUrlFor(isWeb: isWeb, platform: platform),
+    ApiBaseUrlSource.platformDefault,
+  );
+}
+
+/// Convenience wrapper around [resolveApiBaseUrlDetails].
+String resolveApiBaseUrl({
+  String? runtimeOverride,
+  bool isWeb = kIsWeb,
+  TargetPlatform? platform,
+}) =>
+    resolveApiBaseUrlDetails(
+      runtimeOverride: runtimeOverride,
+      isWeb: isWeb,
+      platform: platform,
+    ).url;
+
+/// Human readable explanation of [source] for the connection settings screen.
+String describeApiBaseUrlSource(ApiBaseUrlSource source) {
+  switch (source) {
+    case ApiBaseUrlSource.runtimeOverride:
+      return 'Saved in this app (Settings -> Backend Connection)';
+    case ApiBaseUrlSource.buildFlag:
+      return 'From --dart-define=ORBITCARE_API_BASE_URL';
+    case ApiBaseUrlSource.platformDefault:
+      return 'Built-in local development default';
+  }
 }

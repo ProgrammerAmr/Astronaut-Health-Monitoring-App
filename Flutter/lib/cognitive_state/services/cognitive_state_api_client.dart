@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../../core/config/api_config.dart';
 import '../models/cognitive_state_models.dart';
 import 'csm_http_transport.dart';
 
@@ -10,16 +11,30 @@ const String kDefaultOrbitCareApiBaseUrl = String.fromEnvironment(
 );
 
 class CognitiveStateApiClient {
-  final String baseUrl;
   final Duration timeout;
   final CsmHttpTransport _transport;
+
+  /// Explicitly requested base URL. `null` means "resolve dynamically".
+  final String? _baseUrlOverride;
 
   CognitiveStateApiClient({
     String? baseUrl,
     this.timeout = const Duration(seconds: 6),
     CsmHttpTransport? transport,
-  })  : baseUrl = (baseUrl ?? kDefaultOrbitCareApiBaseUrl).trim(),
+  })  : _baseUrlOverride = baseUrl?.trim(),
         _transport = transport ?? createDefaultCsmTransport();
+
+  /// Effective OrbitCare backend URL.
+  ///
+  /// An explicitly supplied value always wins (including an empty string, which
+  /// keeps the client in its "unconfigured" state). Otherwise the shared
+  /// resolution order applies: runtime override -> `--dart-define` -> local
+  /// development default, re-evaluated per request.
+  String get baseUrl {
+    final override = _baseUrlOverride;
+    if (override != null) return override;
+    return resolveApiBaseUrl();
+  }
 
   bool get isConfigured => _parsedBaseUri != null;
 
@@ -68,7 +83,7 @@ class CognitiveStateApiClient {
         uiStatus: CognitiveStateUiStatus.unavailable,
         errorCode: 'API_BASE_URL_UNCONFIGURED',
         message:
-            'OrbitCare backend URL is not configured. Launch with --dart-define=ORBITCARE_API_BASE_URL=<url> to connect.',
+            'OrbitCare backend URL is not configured. Set it in Settings -> Backend Connection, or launch with --dart-define=ORBITCARE_API_BASE_URL=<url>.',
       );
     }
 
@@ -172,7 +187,7 @@ class CognitiveStateApiClient {
         uiStatus: CognitiveStateUiStatus.unavailable,
         errorCode: 'API_BASE_URL_UNCONFIGURED',
         message:
-            'OrbitCare backend URL is not configured. Launch with --dart-define=ORBITCARE_API_BASE_URL=<url> to connect.',
+            'OrbitCare backend URL is not configured. Set it in Settings -> Backend Connection, or launch with --dart-define=ORBITCARE_API_BASE_URL=<url>.',
       );
     }
 

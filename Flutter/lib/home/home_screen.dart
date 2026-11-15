@@ -553,6 +553,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            key: const Key('connection_settings_button'),
+            tooltip: 'Backend Connection',
+            onPressed: _openConnectionSettings,
+            icon: const Icon(Icons.settings_ethernet, color: AppColors.navy),
+          ),
           if (_authToken != null && _authToken!.isNotEmpty)
             IconButton(
               tooltip: 'Refresh Data',

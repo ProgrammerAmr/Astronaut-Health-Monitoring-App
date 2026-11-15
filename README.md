@@ -132,6 +132,25 @@ If you forget the flag, the app falls back to a local development default (`10.0
 
 ---
 
+### 4. Install It on a Phone (release APK)
+
+An installed APK cannot take `--dart-define` at runtime, so the backend URL is baked in at build time:
+
+```bat
+:: Windows - asks which device, detects your LAN IP, builds and offers adb install
+scripts\build_apk.bat
+```
+```bash
+# macOS / Linux
+./scripts/build_apk.sh
+```
+
+Prefer a ready-made download? The **Build Android App (APK)** GitHub Action (`.github/workflows/android-app.yml`) builds `apk-split` / `apk-universal` / `appbundle` for any `backend_url` you type and attaches it as a downloadable artifact — no local Flutter needed.
+
+Full guide (installing, sideloading, tunnels/deployment, signing, build errors): [`docs/BUILD_AND_INSTALL_APP.md`](docs/BUILD_AND_INSTALL_APP.md).
+
+---
+
 ### Backend not connecting? Cannot get past login?
 
 Read [`docs/CONNECTION_TROUBLESHOOTING.md`](docs/CONNECTION_TROUBLESHOOTING.md) (bilingual Arabic/English). It covers the exact URL per device, firewall rules, the OTP/demo-account login requirement, and an error-message → cause → fix table.

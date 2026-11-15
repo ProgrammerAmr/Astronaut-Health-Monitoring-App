@@ -1,0 +1,113 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	EFO	NCIT	MESH	OBI	CRO
+Term Source File	http://data.bioontology.org/ontologies/EFO			http://data.bioontology.org/ontologies/OBI	
+Term Source Version	132			29	
+Term Source Description	Experimental Factor Ontology			Ontology for Biomedical Investigations	
+INVESTIGATION
+Investigation Identifier	
+Investigation Title	
+Investigation Description	
+Investigation Submission Date	
+Investigation Public Release Date	
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession Number
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name
+Investigation Person First Name
+Investigation Person Mid Initials
+Investigation Person Email
+Investigation Person Phone
+Investigation Person Fax
+Investigation Person Address
+Investigation Person Affiliation
+Investigation Person Roles
+Investigation Person Roles Term Accession Number
+Investigation Person Roles Term Source REF
+STUDY
+Study Identifier	OSD-431
+Study Title	Microgravity and space radiation exert either opposite or synergic effects on single molecular pathways
+Study Description	Microgravity and space radiation (SR) are two highly influential factors affecting humans in space flight. Many health problems reported by astronauts derive from endothelial dysfunction and impaired homeostasis. Here we describe the adaptive response of human, capillary endothelial cells to space. Reference samples on ground and at 1g onboard allowed discrimination between the contribution of microgravity and SR within the combined response to space. Cell softening and reduced motility occurred in space, with loss of actin stress fibers and a greater distribution of microtubules and intermediate filaments in compensation. The frequency of primary cilia also increased. DNA repair mechanisms were indeed activated. Transcriptomics highlighted the opposing effect of microgravity from SR on specific molecular pathways: radiation, unlike microgravity, stimulated pathways for endothelial activation (hypoxia, inflammation), DNA repair and apoptosis, promoting an ageing-like phenotype; microgravity, unlike SR, activated pathways for metabolism and pro-proliferation phenotype. Thus, microgravity and SR should be considered separately to tailor effective countermeasures to protect astronauts’ health. To identify transcriptional changes induced by microgravity, space radiation, and their combination together with other stimuli in space flight, we used a model of human endothelial cells of microvascular origin (HMEC-1). Space samples were exposed to environmental microgravity (g) or set inside the centrifuge reproducing 1g; on ground samples were used as ground control.
+Study Submission Date	14-Sep-2020
+Study Public Release Date	22-Dec-2021
+Study File Name	s_OSD-431.txt
+Comment[Acknowledgments]	
+Comment[DOI]	10.26030/hv55-br83
+Comment[DOI]	10.26030/hv55-br83
+Comment[Data Source Accession]	GSE157937
+Comment[Data Source Link]	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE157937
+Comment[Experiment Platform]	Kubik incubator
+Comment[Flight Program]	International Space Station (ISS)
+Comment[Funding]	The study was supported by European Space Agency (ESA ILSRA-2009-1026), Agenzia Spaziale Italiana (contract number 5681).
+Comment[Identifiers]	
+Comment[Managing NASA Center]	
+Comment[Mission End]	2015-09-12
+Comment[Mission Link]	https://osdr.nasa.gov/bio/repo/data/missions/Soyuz TMA-18M
+Comment[Mission Name]	Soyuz TMA-18M
+Comment[Mission Start]	2015-09-02
+Comment[Project Identifier]	IRISS
+Comment[Project Link]	
+Comment[Project Title]	
+Comment[Project Type]	Spaceflight Study
+Comment[Space Program]	ESA
+Comment[Study Grant Number]	
+STUDY DESIGN DESCRIPTORS
+Study Design Type	transcription profiling by high throughput sequencing
+Study Design Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0002770
+Study Design Type Term Source REF	EFO
+STUDY PUBLICATIONS
+Study PubMed ID	34936031
+Study Publication DOI	10.1007/s00018-021-04025-z
+Study Publication Author List	Barravecchia I, De Cesari C, Forcato M, Scebba F, Pyankova OV, Bridger JM, Foster HA, Signore G, Borghini A, Andreassi M, Andreazzoli M, Bicciato S, Pè ME, Angeloni D.
+Study Publication Title	Microgravity and space radiation inhibit autophagy in human capillary endothelial cells, through either opposite or synergistic effects on specific molecular pathways.
+Study Publication Status	published
+Study Publication Status Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0001796
+Study Publication Status Term Source REF	EFO
+Comment[Study Publication Link]	https://doi.org/10.1007/s00018-021-04025-z
+STUDY FACTORS
+Study Factor Name	Spaceflight	Altered Gravity
+Study Factor Type	Space Flight	Gravity, Altered
+Study Factor Type Term Accession Number	http://purl.bioontology.org/ontology/MESH/D013026	http://purl.bioontology.org/ontology/MESH/D018470
+Study Factor Type Term Source REF	MESH	MESH
+STUDY ASSAYS
+Study Assay File Name	a_OSD-431_transcription-profiling_rna-sequencing-(rna-seq)_Illumina.txt
+Study Assay Measurement Type	transcription profiling
+Study Assay Measurement Type Term Accession Number	obo:OBI_0000424
+Study Assay Measurement Type Term Source REF	OBI
+Study Assay Technology Type	RNA Sequencing (RNA-Seq)
+Study Assay Technology Type Term Accession Number	obo:OBI_0001271
+Study Assay Technology Type Term Source REF	OBI
+Study Assay Technology Platform	Illumina
+STUDY PROTOCOLS
+Study Protocol Name	Growth protocol	treatment protocol	sample collection	Nucleic Acid Extraction	Library Construction	Nucleic Acid Sequencing	Sequence Analysis Data Transformation	GeneLab raw data processing protocol	GeneLab RNAseq data processing protocol
+Study Protocol Type	growth protocol	treatment protocol	sample collection	Nucleic Acid Extraction	Library Construction	Nucleic Acid Sequencing	Sequence Analysis Data Transformation	data transformation	data transformation
+Study Protocol Type Term Accession Number	http://www.ebi.ac.uk/efo/EFO_0003789	http://www.ebi.ac.uk/efo/EFO_0003969	https://osdr.nasa.gov/					http://purl.obolibrary.org/obo/OBI_0200000	http://purl.obolibrary.org/obo/OBI_0200000
+Study Protocol Type Term Source REF	EFO	EFO	EFO	EFO	EFO	EFO	EFO	OBI	OBI
+Study Protocol Description	HMEC-1 cells were seeded on Cyclic Olefin Copolymer coverslips, with 2% gelatin coating to improve cell adhesion, in MCDB131 medium supplemented with 10% Fetal Bovine Serum, hydrocortisone (1 ug/ml), EGF (10 ng/ml), 1 mM sodium bicarbonate, Penicillin (1 U/ml) Streptomycin (1 ug/ml), HEPES (20 mM). Cell cultures were incubated at 37degreeC in 5% CO2, 80% humidity, before insertion into the Experimental Units (EUs). The EUs are able to fulfill under electronic control and without human intervention, a scientific protocol for cell culture and fixing. 20 samples prepared for nucleic acid extraction were fixed with RNA Protect Cell Reagent.	Samples were brought to the Columbus module of the ISS with the Soyuz TMA-18M 44S manned mission on September 2nd, 2015, within the IRISS mission of ESA. At rendezvous, samples were immediately transferred into the KUBIC facility, an incubator with internal centrifuge for artificial gravity. Space microg samples were exposed to environmental microgravity (ug) and named Space_microg samples; Space_1g samples were set inside the centrifuge reproducing 1g. Other samples, concomitantly prepared for ground control, flew back to Pisa with civilian airlines just when the others were flying into space, and were integrated within the KISS facility in the home laboratory. Experiment activation and media exchanges occurred contemporarily in space and on ground.	At the end of the space mission, the samples were fixed in space, sent back to Earth with manned Soyuz TMA-16M 42S on September 12, 2015, retrieved by ESA personnel, brought to the PI laboratory in Pisa and stored at 6C until processed.	Total RNA was extracted with ReliaPrep RNA Cell Miniprep System (Promega, Madison WI, USA). RNA integrity was assessed with agarose gel electrophoresis and ethidium bromide staining/UV light (GenoPlex, VWR, USA), concentration and purity with NanoView Spectrophotometer (GE Healthcare, Pittsburgh, PA, USA).	The RNA-seq libraries were prepared using TruSeq Stranded Total RNA with Ribo-Zero Library Prep Kit.	The libraries were sequenced with Illumina HiSeq 2500 platform and CASAVA version 1.8.2 was used to perform base calling. The quality of the 2 × 125 bp and 2 × 130 bp paired-end reads was assessed with FastQC.	Raw reads were aligned using STAR version 2.5.3 to build version hg38 of the human genome defined by GENCODE release 25. Counts for GENCODE basic annotated genes were calculated from the aligned reads using featureCounts function of the Rsubread R package. Normalization was carried out using edgeR R package. After removal of genes encoded on mitochondrial chromosome, raw counts were normalized according to library size to obtain counts per millions (CPM). Only genes with a CPM greater than 1 in at least 2 sample were retained for subsequent analysis. Genome_build: hg38 (GRCh38)	Raw fastq files from each sample were assessed for % rRNA using HTStream SeqScreener (version 1.3.2) screened against a fasta file of Homo sapiens rRNA sequences retrieved from NCBI on 01-Sep-2021. Raw fastq file quality was evaluated with FastQC (version 0.12.1) and MultiQC (version 1.26) was used to generate MultiQC reports.	Data were processed as described in GL-DPPD-7101-G (https://github.com/nasa/GeneLab_Data_Processing/blob/master/RNAseq/Pipeline_GL-DPPD-7101_Versions/GL-DPPD-7101-G.md), using NF_RCP version 2.1.0 (https://github.com/nasa/GeneLab_RNASeq_Workflow/tree/NF_RCP_2.1.0). In short, raw fastq files were filtered using Trim Galore! (version 0.6.10) powered by Cutadapt (version 4.2). Trimmed fastq file quality was evaluated with FastQC (version 0.12.1), and MultiQC (version 1.26) was used to generate MultiQC reports. Homo Sapiens STAR and RSEM references were built using STAR (version 2.7.11b) and RSEM (version 1.3.3), respectively, Ensembl release 112, genome assembly GRCh38 (Homo_sapiens.GRCh38.dna.primary_assembly.fa) and the following gtf annotation file: Homo_sapiens.GRCh38.112.gtf. Trimmed reads were aligned to the Homo Sapiens STAR reference with STAR (version 2.7.11b) and alignment log files were compiled with MultiQC (version 1.26). Aligned reads were assessed for strandedness using RSeQC infer_experiment.py (version 5.0.4), gene body coverage using RSeQC geneBody_coverage.py (version 5.0.4), inner distance was assessed using RSeQC inner_distance.py (version 5.0.4), and distribution of RNA features using RSeQC read_distribution.py (version 5.0.4). Aligned reads from all samples were quantified using RSEM (version 1.3.3), with strandedness set to reverse and RSEM count log files were compiled with MultiQC (version 1.26). To create a set of rRNA-removed quantification data, Ensembl IDs mapping to ribosomal RNA (rRNA) were removed from the RSEM gene count data. Both the original set of RSEM quantification data and the rRNA-removed data were subject to differential gene expression analysis as follows. A runsheet was generated with dp_tools (version 1.3.8) and the runsheet and quantification data were imported to R (version 4.4.2) with tximport (version 1.34.0) and normalized with DESeq2 (version 1.46.0) median of ratios method. Normalized gene counts were subject to differential expression analysis. Differential expression analysis was performed in R (version 4.4.2) using DESeq2 (version 1.46.0); all groups were compared pairwise using the Wald test and the likelihood ratio test was used to generate the F statistic p-value. Gene annotations were assigned using the custom annotation tables generated in-house as detailed in GL-DPPD-7110-A (https://github.com/nasa/GeneLab_Data_Processing/blob/GL_RefAnnotTable-A_1.1.0/GeneLab_Reference_Annotations/Pipeline_GL-DPPD-7110_Versions/GL-DPPD-7110-A/GL-DPPD-7110-A.md), with STRINGdb (version 2.16.4), PANTHER.db (version 1.0.12), and org.Hs.eg.db (version 3.19.1).
+Study Protocol URI									
+Study Protocol Version									
+Study Protocol Parameters Name	Growth Time	Growth Temperature	Sample Preservation Method;Sample Storage Temperature	QA Instrument	Library Selection;Library Layout;Stranded;Library Kit	Sequencing Instrument;Read Length		Read Depth;rRNA Contamination;Merged Sequence Data;MultiQC File Names	trimmed sequence data;Trimmed Sequence Data/Trimming Reports;Trimmed Sequence Data/MultiQC Reports;aligned sequence data;Aligned Sequence Data/Unmapped Reads;Aligned Sequence Data/Alignment Logs;Aligned Sequence Data/MultiQC Reports;RSeQC/MultiQC Reports;Raw Counts Data;Raw Counts Tables;Raw Counts Data/MultiQC Reports;Normalized Counts Data;differential expression analysis data
+Study Protocol Parameters Name Term Accession Number	https://osdr.nasa.gov/	https://genelab-data.ndc.nasa.gov/	https://osdr.nasa.gov/;https://osdr.nasa.gov/		;;;https://osdr.nasa.gov/	;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl		http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/	http://purl.obolibrary.org/obo/OBI_0002569;https://osdr.nasa.gov/;https://osdr.nasa.gov/;http://purl.obolibrary.org/obo/OBI_0002580;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/;https://osdr.nasa.gov/;http://purl.obolibrary.org/obo/OBI_0002584
+Study Protocol Parameters Name Term Source REF			;		;;;	;NCIT		NCIT;;;	OBI;;;OBI;;;;;;;;;OBI
+Study Protocol Components Name									
+Study Protocol Components Type									
+Study Protocol Components Type Term Accession Number									
+Study Protocol Components Type Term Source REF									
+STUDY CONTACTS
+Study Person Last Name	Angeloni
+Study Person First Name	Debora
+Study Person Mid Initials	
+Study Person Email	d.angeloni@santannapisa.it
+Study Person Phone	
+Study Person Fax	
+Study Person Address	
+Study Person Affiliation	nstitute of Life Sciences, Scuola Superiore Sant'Anna
+Study Person Roles	conceptualization role
+Study Person Roles Term Accession Number	http://purl.org/credit/ontology
+Study Person Roles Term Source REF	CRO
+Comment[orcidIdentifier]	0000-0002-3850-5392
